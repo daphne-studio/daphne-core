@@ -338,7 +338,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## Support
 
-For support and updates, visit: [Daphne Studio's Discord Server](https://discord.gg/qEwgy9B5br)
+For support and updates, visit: [Daphne Studio's Discord Server](https://discord.gg/daphne)
 
 ## Version
 
