@@ -15,6 +15,10 @@ if not StateBag then
     error('[Qbox Adapter] StateBag not found! Make sure core/statebag.lua is loaded before this file.')
 end
 
+if not Cache then
+    error('[Qbox Adapter] Cache not found! Make sure core/cache.lua is loaded before this file.')
+end
+
 ---@class QboxAdapter : Bridge
 QboxAdapter = QboxAdapter or setmetatable({}, Bridge)
 local QboxAdapter = QboxAdapter
@@ -77,10 +81,23 @@ end
 ---@param source number Player server ID
 ---@return table|nil player Player object or nil if not found
 function QboxAdapter:GetPlayer(source)
+    -- Check cache first
+    local cachedPlayer = Cache.GetPlayer(source)
+    if cachedPlayer then
+        return cachedPlayer
+    end
+    
+    -- Get from framework
     local qbCore = self:GetQBCore()
     if not qbCore then return nil end
     
-    return qbCore:GetPlayer(source)
+    local player = qbCore:GetPlayer(source)
+    if player then
+        -- Cache the player object
+        Cache.SetPlayer(source, player)
+    end
+    
+    return player
 end
 
 ---Get player data from source
@@ -92,17 +109,8 @@ function QboxAdapter:GetPlayerData(source)
     
     local playerData = player.PlayerData
     
-    -- Sync to state bag
-    if playerData then
-        StateBag.SetStateBag('player', source, 'data', {
-            citizenid = playerData.citizenid,
-            name = playerData.charinfo and (playerData.charinfo.firstname .. ' ' .. playerData.charinfo.lastname) or '',
-            money = playerData.money or {},
-            job = playerData.job or {},
-            gang = playerData.gang or {},
-            metadata = playerData.metadata or {}
-        })
-    end
+    -- Note: State bag updates are handled by framework events, not read operations
+    -- This improves performance by avoiding unnecessary updates on every read
     
     return playerData
 end
@@ -117,10 +125,8 @@ function QboxAdapter:GetMoney(source, type)
     
     local money = player.PlayerData.money[type]
     
-    -- Sync to state bag
-    if money then
-        StateBag.SetStateBag('player', source, 'money', player.PlayerData.money)
-    end
+    -- Note: State bag updates are handled by framework events, not read operations
+    -- This improves performance by avoiding unnecessary updates on every read
     
     return money
 end
@@ -137,8 +143,10 @@ function QboxAdapter:AddMoney(source, type, amount)
     local success = player.Functions.AddMoney(type, amount)
     
     if success then
-        -- Sync updated money to state bag
-        StateBag.SetStateBag('player', source, 'money', player.PlayerData.money)
+        -- Invalidate cache to ensure fresh data
+        Cache.InvalidatePlayer(source)
+        -- Sync updated money to state bag (reactive update)
+        StateBag.SetStateBag('player', source, 'money', player.PlayerData.money, false)
     end
     
     return success
@@ -156,8 +164,10 @@ function QboxAdapter:RemoveMoney(source, type, amount)
     local success = player.Functions.RemoveMoney(type, amount)
     
     if success then
-        -- Sync updated money to state bag
-        StateBag.SetStateBag('player', source, 'money', player.PlayerData.money)
+        -- Invalidate cache to ensure fresh data
+        Cache.InvalidatePlayer(source)
+        -- Sync updated money to state bag (reactive update)
+        StateBag.SetStateBag('player', source, 'money', player.PlayerData.money, false)
     end
     
     return success
@@ -206,10 +216,8 @@ function QboxAdapter:GetJob(source)
     
     local job = player.PlayerData.job
     
-    if job then
-        -- Sync to state bag
-        StateBag.SetStateBag('player', source, 'job', job)
-    end
+    -- Note: State bag updates are handled by framework events, not read operations
+    -- This improves performance by avoiding unnecessary updates on every read
     
     return job
 end
@@ -223,10 +231,8 @@ function QboxAdapter:GetGang(source)
     
     local gang = player.PlayerData.gang
     
-    if gang then
-        -- Sync to state bag
-        StateBag.SetStateBag('player', source, 'gang', gang)
-    end
+    -- Note: State bag updates are handled by framework events, not read operations
+    -- This improves performance by avoiding unnecessary updates on every read
     
     return gang
 end
@@ -263,7 +269,10 @@ function QboxAdapter:SetMetadata(source, key, value)
     
     player.PlayerData.metadata[key] = value
     
-    -- Sync to state bag
+    -- Invalidate cache to ensure fresh data
+    Cache.InvalidatePlayer(source)
+    
+    -- Sync to state bag (reactive update)
     StateBag.SetStateBag('player', source, 'data', {
         citizenid = player.PlayerData.citizenid,
         name = player.PlayerData.charinfo and (player.PlayerData.charinfo.firstname .. ' ' .. player.PlayerData.charinfo.lastname) or '',
@@ -271,7 +280,7 @@ function QboxAdapter:SetMetadata(source, key, value)
         job = player.PlayerData.job or {},
         gang = player.PlayerData.gang or {},
         metadata = player.PlayerData.metadata or {}
-    })
+    }, false)
     
     return true
 end
@@ -330,8 +339,8 @@ function QboxAdapter:GetVehicle(vehicle)
         data.fuel = vehicleData.fuel
     end
     
-    -- Sync to state bag
-    StateBag.SetStateBag('vehicle', vehicle, 'data', data)
+    -- Note: State bag updates are handled by framework events, not read operations
+    -- This improves performance by avoiding unnecessary updates on every read
     
     return data
 end

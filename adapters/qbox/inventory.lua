@@ -6,34 +6,19 @@ if not QboxAdapter then
     error('[Qbox Inventory] QboxAdapter not found! Make sure adapters/qbox/adapter.lua is loaded.')
 end
 
+if not InventoryDetector then
+    error('[Qbox Inventory] InventoryDetector not found! Make sure shared/inventory_detector.lua is loaded.')
+end
+
 local Inventory = {}
 Inventory.__index = Inventory
-
----Detect which inventory system is being used
----@return string|nil inventorySystem 'ox_inventory', 'qb-inventory', or nil
-local function DetectInventorySystem()
-    -- Check for ox_inventory
-    local success, _ = pcall(function()
-        return exports.ox_inventory
-    end)
-    if success then
-        return 'ox_inventory'
-    end
-    
-    -- Check for qb-inventory
-    if GetResourceState('qb-inventory') == 'started' then
-        return 'qb-inventory'
-    end
-    
-    return nil
-end
 
 ---Get item from player inventory
 ---@param source number Player server ID
 ---@param item string Item name
 ---@return table|nil itemData Item data or nil
 function Inventory:GetItem(source, item)
-    local inventorySystem = DetectInventorySystem()
+    local inventorySystem = InventoryDetector.Detect('qbox')
     
     if inventorySystem == 'ox_inventory' then
         -- ox_inventory uses different API
@@ -62,7 +47,7 @@ end
 ---@param info table? Item info/metadata (optional)
 ---@return boolean success True if successful
 function Inventory:AddItem(source, item, amount, slot, info)
-    local inventorySystem = DetectInventorySystem()
+    local inventorySystem = InventoryDetector.Detect('qbox')
     
     if inventorySystem == 'ox_inventory' then
         local success, result = pcall(function()
@@ -86,7 +71,7 @@ end
 ---@param slot number? Slot number (optional)
 ---@return boolean success True if successful
 function Inventory:RemoveItem(source, item, amount, slot)
-    local inventorySystem = DetectInventorySystem()
+    local inventorySystem = InventoryDetector.Detect('qbox')
     
     if inventorySystem == 'ox_inventory' then
         local success, result = pcall(function()
@@ -110,7 +95,7 @@ end
 ---@return boolean hasItem True if player has item
 function Inventory:HasItem(source, item, amount)
     amount = amount or 1
-    local inventorySystem = DetectInventorySystem()
+    local inventorySystem = InventoryDetector.Detect('qbox')
     
     if inventorySystem == 'ox_inventory' then
         local success, itemData = pcall(function()

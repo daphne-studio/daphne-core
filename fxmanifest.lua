@@ -11,7 +11,10 @@ lua54 'yes'
 shared_scripts {
     'shared/types.lua',
     'shared/config.lua',
+    'shared/inventory_detector.lua',
+    'core/error_handler.lua',
     'core/bridge.lua',
+    'core/cache.lua',
     'core/statebag.lua',
     'adapters/qbox/adapter.lua',
     'adapters/qbox/player.lua',

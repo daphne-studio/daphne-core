@@ -15,6 +15,10 @@ if not StateBag then
     error('[ESX Adapter] StateBag not found! Make sure core/statebag.lua is loaded before this file.')
 end
 
+if not Cache then
+    error('[ESX Adapter] Cache not found! Make sure core/cache.lua is loaded before this file.')
+end
+
 ---@class ESXAdapter : Bridge
 ESXAdapter = ESXAdapter or setmetatable({}, Bridge)
 local ESXAdapter = ESXAdapter
@@ -69,10 +73,23 @@ end
 ---@param source number Player server ID
 ---@return table|nil player Player object or nil if not found
 function ESXAdapter:GetPlayer(source)
+    -- Check cache first
+    local cachedPlayer = Cache.GetPlayer(source)
+    if cachedPlayer then
+        return cachedPlayer
+    end
+    
+    -- Get from framework
     local esx = self:GetESX()
     if not esx then return nil end
     
-    return esx.GetPlayerFromId(source)
+    local player = esx.GetPlayerFromId(source)
+    if player then
+        -- Cache the player object
+        Cache.SetPlayer(source, player)
+    end
+    
+    return player
 end
 
 ---Get player data from source
@@ -116,14 +133,8 @@ function ESXAdapter:GetPlayerData(source)
         playerData.metadata = metadata
     end
     
-    -- Sync to state bag
-    StateBag.SetStateBag('player', source, 'data', {
-        citizenid = playerData.citizenid,
-        name = playerData.name,
-        money = playerData.money,
-        job = playerData.job,
-        metadata = playerData.metadata
-    })
+    -- Note: State bag updates are handled by framework events, not read operations
+    -- This improves performance by avoiding unnecessary updates on every read
     
     return playerData
 end
@@ -149,13 +160,8 @@ function ESXAdapter:GetMoney(source, type)
         end
     end
     
-    -- Sync to state bag
-    if amount then
-        StateBag.SetStateBag('player', source, 'money', {
-            cash = xPlayer.getMoney(),
-            bank = xPlayer.getAccount('bank').money
-        })
-    end
+    -- Note: State bag updates are handled by framework events, not read operations
+    -- This improves performance by avoiding unnecessary updates on every read
     
     return amount
 end
@@ -186,11 +192,13 @@ function ESXAdapter:AddMoney(source, type, amount)
     end
     
     if success then
-        -- Sync updated money to state bag
+        -- Invalidate cache to ensure fresh data
+        Cache.InvalidatePlayer(source)
+        -- Sync updated money to state bag (reactive update)
         StateBag.SetStateBag('player', source, 'money', {
             cash = xPlayer.getMoney(),
             bank = xPlayer.getAccount('bank').money
-        })
+        }, false)
     end
     
     return success
@@ -226,11 +234,13 @@ function ESXAdapter:RemoveMoney(source, type, amount)
     end
     
     if success then
-        -- Sync updated money to state bag
+        -- Invalidate cache to ensure fresh data
+        Cache.InvalidatePlayer(source)
+        -- Sync updated money to state bag (reactive update)
         StateBag.SetStateBag('player', source, 'money', {
             cash = xPlayer.getMoney(),
             bank = xPlayer.getAccount('bank').money
-        })
+        }, false)
     end
     
     return success
@@ -286,8 +296,8 @@ function ESXAdapter:GetJob(source)
         onduty = xPlayer.job.onduty or false
     }
     
-    -- Sync to state bag
-    StateBag.SetStateBag('player', source, 'job', job)
+    -- Note: State bag updates are handled by framework events, not read operations
+    -- This improves performance by avoiding unnecessary updates on every read
     
     return job
 end
@@ -325,8 +335,8 @@ function ESXAdapter:GetVehicle(vehicle)
         data.metadata = vehicleData.metadata or {}
     end
     
-    -- Sync to state bag
-    StateBag.SetStateBag('vehicle', vehicle, 'data', data)
+    -- Note: State bag updates are handled by framework events, not read operations
+    -- This improves performance by avoiding unnecessary updates on every read
     
     return data
 end

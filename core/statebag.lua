@@ -30,6 +30,72 @@ StateBag._cache = {}
 ---Pending updates per entity
 StateBag._pendingUpdates = {}
 
+---Deep comparison helper function (optimized)
+---Performs shallow comparison first, then selective deep comparison
+---@param a any First value
+---@param b any Second value
+---@param depth number? Maximum depth for deep comparison (default: 3)
+---@param visited table? Visited references to prevent circular references
+---@return boolean areEqual True if values are equal
+local function DeepEqual(a, b, depth, visited)
+    depth = depth or 3
+    visited = visited or {}
+    
+    -- Shallow comparison first (fast path)
+    if a == b then
+        return true
+    end
+    
+    -- Type check
+    local typeA = type(a)
+    local typeB = type(b)
+    if typeA ~= typeB then
+        return false
+    end
+    
+    -- If depth limit reached, fall back to reference comparison
+    if depth <= 0 then
+        return a == b
+    end
+    
+    -- Handle tables
+    if typeA == 'table' then
+        -- Check for circular references
+        if visited[a] and visited[a] == b then
+            return true
+        end
+        visited[a] = b
+        
+        -- Count keys in both tables
+        local countA = 0
+        local countB = 0
+        for _ in pairs(a) do countA = countA + 1 end
+        for _ in pairs(b) do countB = countB + 1 end
+        
+        if countA ~= countB then
+            return false
+        end
+        
+        -- Compare each key-value pair
+        for key, valueA in pairs(a) do
+            local valueB = b[key]
+            if valueB == nil then
+                return false
+            end
+            
+            -- Recursive comparison with reduced depth
+            if not DeepEqual(valueA, valueB, depth - 1, visited) then
+                return false
+            end
+        end
+        
+        return true
+    end
+    
+    -- For other types, use simple equality
+    return a == b
+end
+
 ---Get state bag name for entity
 ---@param entityType string Entity type (player, vehicle, object)
 ---@param entityId number|string Entity ID
@@ -84,14 +150,11 @@ function StateBag.SetStateBag(entityType, entityId, key, value, immediate)
     local cacheKey = string.format('%s:%s:%s', entityType, entityId, key)
     
     -- Change detection - skip if value hasn't changed
+    -- Optimized: Uses shallow comparison first, then selective deep comparison
+    -- This is much faster than JSON encoding for large tables
     if StateBag._cache[cacheKey] ~= nil then
         local cachedValue = StateBag._cache[cacheKey]
-        if type(cachedValue) == 'table' and type(value) == 'table' then
-            -- Deep comparison for tables
-            if json.encode(cachedValue) == json.encode(value) then
-                return -- No change, skip update
-            end
-        elseif cachedValue == value then
+        if DeepEqual(cachedValue, value) then
             return -- No change, skip update
         end
     end
