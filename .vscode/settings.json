@@ -4,7 +4,8 @@
         "C:/Users/yusuf/Desktop/Github/qbox_types/types"
     ],
     "Lua.diagnostics.globals": [
-        "RegisterNetEvent"
+        "RegisterNetEvent",
+        "AddEventHandler"
     ],
     "editor.defaultFormatter": "Koihik.vscode-lua-format",
     "editor.formatOnSave": true

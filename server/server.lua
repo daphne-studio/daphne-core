@@ -1,0 +1,3 @@
+---Server initialization
+---Load bridge system
+-- server/bridge.lua is loaded automatically via server_scripts in fxmanifest.lua
