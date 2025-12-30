@@ -21,3 +21,4 @@ RegisterNetEvent('example:giveMoney', function()
     end
 end)
 
+

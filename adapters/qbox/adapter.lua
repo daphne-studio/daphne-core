@@ -186,6 +186,60 @@ function QboxAdapter:GetQBCore()
     return self.QBCore
 end
 
+---Wrap player object to intercept money function calls
+---@param player table QBCore/Qbox player object
+---@param source number Player server ID
+---@return table wrappedPlayer Wrapped player object
+function QboxAdapter:WrapPlayerObject(player, source)
+    if not player or not player.Functions then
+        return player
+    end
+
+    -- Check if already wrapped
+    if player._daphneWrapped then
+        return player
+    end
+
+    -- Store original functions
+    local originalAddMoney = player.Functions.AddMoney
+    local originalRemoveMoney = player.Functions.RemoveMoney
+
+    -- Wrap AddMoney
+    player.Functions.AddMoney = function(type, amount)
+        local result = originalAddMoney(type, amount)
+        if result then
+            -- Update state bag after money change
+            Wait(100) -- Small delay to ensure QBCore/Qbox has updated
+            local updatedPlayer = self:GetPlayer(source)
+            if updatedPlayer and updatedPlayer.PlayerData and updatedPlayer.PlayerData.money then
+                StateBag.SetStateBag('player', source, 'money', updatedPlayer.PlayerData.money, false)
+                print(string.format('[Daphne Core] State bag updated for player %s after AddMoney', source))
+            end
+        end
+        return result
+    end
+
+    -- Wrap RemoveMoney
+    player.Functions.RemoveMoney = function(type, amount)
+        local result = originalRemoveMoney(type, amount)
+        if result then
+            -- Update state bag after money change
+            Wait(100) -- Small delay to ensure QBCore/Qbox has updated
+            local updatedPlayer = self:GetPlayer(source)
+            if updatedPlayer and updatedPlayer.PlayerData and updatedPlayer.PlayerData.money then
+                StateBag.SetStateBag('player', source, 'money', updatedPlayer.PlayerData.money, false)
+                print(string.format('[Daphne Core] State bag updated for player %s after RemoveMoney', source))
+            end
+        end
+        return result
+    end
+
+    -- Mark as wrapped
+    player._daphneWrapped = true
+
+    return player
+end
+
 ---Get player object from source
 ---@param source number|string Player server ID or identifier (citizenid/userId/phone)
 ---@return table|nil player Player object or nil if not found
@@ -207,10 +261,11 @@ function QboxAdapter:GetPlayer(source)
         end
         return nil
     end)
-    
+
     if success and player then
-        -- Cache the player object (only for numeric source)
+        -- Wrap player object for state bag updates (only for numeric source)
         if type(source) == 'number' then
+            player = self:WrapPlayerObject(player, source)
             Cache.SetPlayer(source, player)
         end
         return player
@@ -223,10 +278,11 @@ function QboxAdapter:GetPlayer(source)
         end
         return nil
     end)
-    
+
     if success and player then
-        -- Cache the player object (only for numeric source)
+        -- Wrap player object for state bag updates (only for numeric source)
         if type(source) == 'number' then
+            player = self:WrapPlayerObject(player, source)
             Cache.SetPlayer(source, player)
         end
         return player
@@ -239,10 +295,11 @@ function QboxAdapter:GetPlayer(source)
             success, player = pcall(function()
                 return qbCore:GetPlayer(source)
             end)
-            
+
             if success and player then
-                -- Cache the player object (only for numeric source)
+                -- Wrap player object for state bag updates (only for numeric source)
                 if type(source) == 'number' then
+                    player = self:WrapPlayerObject(player, source)
                     Cache.SetPlayer(source, player)
                 end
                 return player

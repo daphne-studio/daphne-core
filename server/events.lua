@@ -46,17 +46,117 @@ end)
 ---Listen for QBCore/Qbox player unloaded event
 RegisterNetEvent('QBCore:Server:OnPlayerUnload', function()
     local source = source
-    
+
+    -- Clear hooked player tracking
+    hookedPlayers[source] = nil
+
     -- Clear player cache when player unloads
     if Cache then
         Cache.InvalidatePlayer(source)
     end
-    
+
     -- StateBag is loaded via shared_scripts, so it's available as global
     if StateBag then
         -- Clear player state bag cache when player unloads
         StateBag.ClearCache('player', source)
         print(string.format('[Daphne Core] Player %s unloaded, cache cleared', source))
+    end
+end)
+
+---QBCore/Qbox Money Change Detection
+---Since QBCore/Qbox doesn't have direct money change events,
+---we need to hook into Player.Functions.AddMoney/RemoveMoney calls
+
+-- Hook into QBCore/Qbox Player object creation
+-- When a Player object is created, wrap its Functions.AddMoney/RemoveMoney
+-- to trigger state bag updates
+
+local hookedPlayers = {} -- Track hooked players to avoid double-hooking
+
+local function HookPlayerMoneyFunctions(source)
+    if hookedPlayers[source] then return end -- Already hooked
+
+    local player = QboxAdapter:GetPlayer(source)
+    if not player or not player.Functions then return end
+
+    -- Store original functions
+    local originalAddMoney = player.Functions.AddMoney
+    local originalRemoveMoney = player.Functions.RemoveMoney
+
+    -- Wrap AddMoney
+    player.Functions.AddMoney = function(type, amount)
+        local result = originalAddMoney(type, amount)
+        if result then
+            -- Update state bag after money change
+            Wait(100) -- Small delay to ensure QBCore/Qbox has updated
+            local updatedPlayer = QboxAdapter:GetPlayer(source)
+            if updatedPlayer and updatedPlayer.PlayerData and updatedPlayer.PlayerData.money then
+                StateBag.SetStateBag('player', source, 'money', updatedPlayer.PlayerData.money, false)
+            end
+        end
+        return result
+    end
+
+    -- Wrap RemoveMoney
+    player.Functions.RemoveMoney = function(type, amount)
+        local result = originalRemoveMoney(type, amount)
+        if result then
+            -- Update state bag after money change
+            Wait(100) -- Small delay to ensure QBCore/Qbox has updated
+            local updatedPlayer = QboxAdapter:GetPlayer(source)
+            if updatedPlayer and updatedPlayer.PlayerData and updatedPlayer.PlayerData.money then
+                StateBag.SetStateBag('player', source, 'money', updatedPlayer.PlayerData.money, false)
+            end
+        end
+        return result
+    end
+
+    hookedPlayers[source] = true
+    print(string.format('[Daphne Core] Hooked money functions for player %s', source))
+end
+
+-- Hook into player loaded event
+RegisterNetEvent('QBCore:Server:OnPlayerLoaded', function()
+    local source = source
+    Wait(1000) -- Wait for player to fully load
+    HookPlayerMoneyFunctions(source)
+
+    -- Original logic continues...
+    -- Invalidate cache to force refresh
+    if Cache then
+        Cache.InvalidatePlayer(source)
+    end
+
+    -- Bridge is loaded via server_scripts, so it's available as global
+    if Bridge then
+        -- Sync player data to state bag when player loads
+        local playerData = Bridge:GetPlayerData(source)
+        if playerData then
+            -- Update state bags reactively
+            if StateBag then
+                StateBag.SetStateBag('player', source, 'data', {
+                    citizenid = playerData.citizenid,
+                    name = playerData.charinfo and (playerData.charinfo.firstname .. ' ' .. playerData.charinfo.lastname) or '',
+                    money = playerData.money or {},
+                    job = playerData.job or {},
+                    gang = playerData.gang or {},
+                    metadata = playerData.metadata or {}
+                }, false)
+
+                if playerData.money then
+                    StateBag.SetStateBag('player', source, 'money', playerData.money, false)
+                end
+
+                if playerData.job then
+                    StateBag.SetStateBag('player', source, 'job', playerData.job, false)
+                end
+
+                if playerData.gang then
+                    StateBag.SetStateBag('player', source, 'gang', playerData.gang, false)
+                end
+            end
+            print(string.format('[Daphne Core] Player %s loaded, data synced to state bag', source))
+        end
     end
 end)
 
