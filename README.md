@@ -6,13 +6,146 @@ A flexible, high-performance framework bridge system for FiveM that uses the Ada
 
 ## Features
 
+- **Lightweight & Performant**: Minimal overhead with 0.00ms CPU usage in idle state
 - **Adapter Pattern Architecture**: Easily extensible to support multiple frameworks
 - **Cross-Framework Proxy System**: Run scripts written for one framework on servers using different frameworks
 - **State Bag Integration**: Leverages FiveM's Lua 5.4 state bag mechanism for efficient data synchronization
-- **Performance Optimized**: Batch updates, throttling, and change detection for minimal CPU usage
 - **Framework Agnostic**: Clean abstraction layer that works with any supported framework
 - **Currently Supports**: Qbox/QBCore, ESX Legacy, and ND_Core frameworks
 - **Future Ready**: Easy to add support for OX Core and other frameworks
+
+## Overview
+
+```lua
+-- 1. Get player data
+local playerData = exports['daphne_core']:GetPlayerData(source)
+if playerData then
+    print("Player Name: " .. playerData.name)
+end
+
+-- 2. Get player money
+local cash = exports['daphne_core']:GetMoney(source, 'cash')
+local bank = exports['daphne_core']:GetMoney(source, 'bank')
+
+-- 3. Add money to player
+exports['daphne_core']:AddMoney(source, 'cash', 1000)
+
+-- 4. Get player job
+local job = exports['daphne_core']:GetJob(source)
+if job then
+    print("Job: " .. job.name .. " - Grade: " .. job.grade.level)
+end
+
+-- 5. Watch state bag changes (client-side)
+exports['daphne_core']:WatchPlayerStateBag('money', function(value, oldValue)
+    if value and oldValue then
+        print("Cash changed from $" .. oldValue.cash .. " to $" .. value.cash)
+    end
+end)
+```
+
+## Table of Contents
+
+- [Motivation](#motivation)
+- [Installation](#installation)
+  - [Framework-Specific Notes](#framework-specific-notes)
+- [Quick Start](#quick-start)
+- [Architecture](#architecture)
+- [Usage Examples](#usage-examples)
+  - [Server-Side Usage](#server-side-usage)
+  - [Client-Side Usage](#client-side-usage)
+  - [Cross-Framework Proxy](#cross-framework-proxy)
+- [State Bag System](#state-bag-system)
+- [Adding Support for New Frameworks](#adding-support-for-new-frameworks)
+- [Documentation](#documentation)
+- [Examples](#examples)
+- [Contributing](#contributing)
+- [License](#license)
+
+## Motivation
+
+Building FiveM resources should be straightforward and framework-agnostic. Most scripts today are tightly coupled to a specific framework (QBCore, ESX, ND_Core), making it difficult to switch frameworks or maintain compatibility across different server setups.
+
+daphne-core provides a clean abstraction layer that eliminates framework-specific code from your resources. Write once, run anywhere—whether your server uses QBCore, ESX, ND_Core, or any future framework we add support for.
+
+The bridge system uses the proven Adapter Design Pattern, ensuring:
+- **Zero Framework Lock-in**: Switch frameworks without changing your code
+- **Performance First**: Minimal overhead with intelligent caching and batching
+- **Easy Extension**: Add new framework support by implementing a simple adapter interface
+- **Future Proof**: Built on FiveM's native state bag system for long-term compatibility
+
+## Installation
+
+### Prerequisites
+
+- FiveM Server
+- Lua 5.4 (included with FiveM)
+- One of the supported frameworks:
+  - **Qbox** or **QBCore** framework
+  - **ESX Legacy** framework
+  - **ND_Core** framework
+
+### Installation Steps
+
+1. **Download daphne-core** and place it in your FiveM server's `resources` directory
+
+2. **Add to server.cfg:**
+   ```cfg
+   # Ensure your framework starts first
+   ensure qbx_core  # or qb-core for QBCore
+   # OR
+   ensure es_extended  # for ESX
+   # OR
+   ensure ND_Core  # for ND Core
+   
+   # Then ensure daphne_core
+   ensure daphne_core
+   ```
+
+3. **Restart your server**
+
+### Framework-Specific Notes
+
+**For Qbox/QBCore:**
+- Ensure `qbx_core` or `qb-core` is started before `daphne_core`
+- Compatible with QBX inventory systems and ox_inventory
+- Supports all standard QBX/QBCore features including gang system
+- See [QBCore Documentation](docs/QBCore.md) for detailed information
+
+**For ESX Legacy:**
+- Ensure `es_extended` is started before `daphne_core`
+- Automatic inventory system detection (`esx_inventory` or `ox_inventory`)
+- Supports ESX job system, accounts, and metadata
+- See [ESX Documentation](docs/ESX.md) for detailed information
+
+**For ND_Core:**
+- Ensure `ND_Core` is started before `daphne_core` (note: resource name uses capital letters)
+- Compatible with ND_Core inventory systems and ox_inventory
+- Supports ND_Core job system and metadata
+- See [ND_Core Documentation](docs/ND_Core.md) for detailed information
+
+## Quick Start
+
+After installation, verify that daphne-core is working:
+
+```lua
+-- Server-side test
+RegisterCommand('testdaphne', function(source, args)
+    local playerData = exports['daphne_core']:GetPlayerData(source)
+    if playerData then
+        print("✓ daphne-core is working!")
+        print("Player: " .. playerData.name)
+    else
+        print("✗ daphne-core initialization failed")
+    end
+end, false)
+```
+
+Check your server console for initialization messages:
+```
+[Daphne Core] Framework detected: qbox
+[Daphne Core] Bridge initialized with Qbox adapter
+```
 
 ## Architecture
 
@@ -28,8 +161,8 @@ The bridge system follows the Adapter Design Pattern, allowing seamless integrat
         ┌───────────────┴───────────────┐
         │                               │
 ┌───────▼────────┐    ┌───────▼────────┐    ┌────────▼────────┐
-│  Qbox Adapter  │    │  ESX Adapter  │    │  Future Adapters│
-│                │    │               │    │  (OX Core, etc) │
+│  Qbox Adapter  │    │  ESX Adapter  │    │  ND_Core Adapter│
+│                │    │               │    │                 │
 └────────────────┘    └───────────────┘    └─────────────────┘
 ```
 
@@ -39,35 +172,18 @@ The bridge system follows the Adapter Design Pattern, allowing seamless integrat
 - **State Bag Manager** (`core/statebag.lua`): Handles state bag updates with batching and throttling
 - **Framework Detection** (`shared/config.lua`): Automatically detects the active framework
 - **Adapters** (`adapters/[framework]/`): Framework-specific implementations
+- **Proxy System** (`proxies/`): Cross-framework compatibility layer
 
-## Installation
+## Usage Examples
 
-1. Place the `daphne_core` folder in your FiveM server's `resources` directory
-2. Add `ensure daphne_core` to your `server.cfg`
-3. Make sure your framework (Qbox/QBCore or ESX Legacy) is started before `daphne_core`
-4. Restart your server
-
-### Framework-Specific Notes
-
-**For Qbox/QBCore:**
-- Ensure `qbx_core` or `qb-core` is started before `daphne_core`
-
-**For ESX Legacy:**
-- Ensure `es_extended` is started before `daphne_core`
-- Supports both `esx_inventory` and `ox_inventory` (auto-detected)
-- See [ESX Documentation](docs/ESX.md) for detailed ESX-specific information
-
-## Usage
-
-> **📚 For more detailed examples and integration patterns, see the [Examples Directory](examples/README.md)**
-
-### Server-Side
+### Server-Side Usage
 
 ```lua
 -- Get player data
 local playerData = exports['daphne_core']:GetPlayerData(source)
 if playerData then
     print("Player Name: " .. playerData.name)
+    print("CitizenID: " .. playerData.citizenid)
 end
 
 -- Get player money
@@ -96,7 +212,7 @@ if vehicleData then
 end
 ```
 
-### Client-Side
+### Client-Side Usage
 
 ```lua
 -- Get local player data
@@ -124,204 +240,27 @@ exports['daphne_core']:WatchPlayerStateBag('money', function(value, oldValue)
 end)
 ```
 
-## API Reference
+### Cross-Framework Proxy
 
-### Server Exports
+daphne-core includes a powerful proxy system that allows scripts written for one framework to run on servers using different frameworks:
 
-#### `GetPlayer(source)`
-Returns the player object from the framework.
+```lua
+-- QBCore script running on ESX server
+local QBCore = QBCore  -- ✅ Use global variable (proxy works)
+local Player = QBCore.Functions.GetPlayer(source)
+Player.Functions.AddMoney('cash', 1000)
 
-**Parameters:**
-- `source` (number): Player server ID
+-- ESX script running on QBCore server
+local ESX = ESX  -- ✅ Use global variable (proxy works)
+local xPlayer = ESX.GetPlayerFromId(source)
+xPlayer.addMoney(1000)
 
-**Returns:**
-- `table|nil`: Player object or nil if not found
+-- ND_Core script running on QBCore server
+local player = NDCore:getPlayer(source)  -- ✅ Use global variable (proxy works)
+player.addMoney('cash', 1000, 'Example')
+```
 
-#### `GetPlayerData(source)`
-Returns player data including citizenid, name, money, job, etc.
-
-**Parameters:**
-- `source` (number): Player server ID
-
-**Returns:**
-- `table|nil`: Player data or nil if not found
-
-#### `GetMoney(source, type)`
-Gets player money for a specific type.
-
-**Parameters:**
-- `source` (number): Player server ID
-- `type` (string): Money type (e.g., 'cash', 'bank', 'crypto')
-
-**Returns:**
-- `number|nil`: Money amount or nil if not found
-
-#### `AddMoney(source, type, amount)`
-Adds money to a player.
-
-**Parameters:**
-- `source` (number): Player server ID
-- `type` (string): Money type
-- `amount` (number): Amount to add
-
-**Returns:**
-- `boolean`: True if successful
-
-#### `RemoveMoney(source, type, amount)`
-Removes money from a player.
-
-**Parameters:**
-- `source` (number): Player server ID
-- `type` (string): Money type
-- `amount` (number): Amount to remove
-
-**Returns:**
-- `boolean`: True if successful
-
-#### `GetInventory(source)`
-Gets player inventory.
-
-**Parameters:**
-- `source` (number): Player server ID
-
-**Returns:**
-- `table|nil`: Inventory data or nil if not found
-
-#### `GetJob(source)`
-Gets player job information.
-
-**Parameters:**
-- `source` (number): Player server ID
-
-**Returns:**
-- `table|nil`: Job data or nil if not found
-
-#### `GetVehicle(vehicle)`
-Gets vehicle data.
-
-**Parameters:**
-- `vehicle` (number): Vehicle entity
-
-**Returns:**
-- `table|nil`: Vehicle data or nil if not found
-
-#### `GetGang(source)` (QBCore only)
-Gets player gang information.
-
-**Parameters:**
-- `source` (number): Player server ID
-
-**Returns:**
-- `table|nil`: Gang data or nil if not found
-
-#### `GetMetadata(source, key)`
-Gets player metadata.
-
-**Parameters:**
-- `source` (number): Player server ID
-- `key` (string, optional): Metadata key (returns all metadata if nil)
-
-**Returns:**
-- `any|nil`: Metadata value or all metadata if key is nil
-
-#### `SetMetadata(source, key, value)`
-Sets player metadata.
-
-**Parameters:**
-- `source` (number): Player server ID
-- `key` (string): Metadata key
-- `value` (any): Metadata value
-
-**Returns:**
-- `boolean`: True if successful
-
-#### `GetItem(source, item)`
-Gets item from player inventory.
-
-**Parameters:**
-- `source` (number): Player server ID
-- `item` (string): Item name
-
-**Returns:**
-- `table|nil`: Item data or nil if not found
-
-#### `AddItem(source, item, amount, slot, info)`
-Adds item to player inventory.
-
-**Parameters:**
-- `source` (number): Player server ID
-- `item` (string): Item name
-- `amount` (number): Amount to add
-- `slot` (number, optional): Slot number
-- `info` (table, optional): Item info/metadata
-
-**Returns:**
-- `boolean`: True if successful
-
-#### `RemoveItem(source, item, amount, slot)`
-Removes item from player inventory.
-
-**Parameters:**
-- `source` (number): Player server ID
-- `item` (string): Item name
-- `amount` (number): Amount to remove
-- `slot` (number, optional): Slot number
-
-**Returns:**
-- `boolean`: True if successful
-
-#### `HasItem(source, item, amount)`
-Checks if player has item.
-
-**Parameters:**
-- `source` (number): Player server ID
-- `item` (string): Item name
-- `amount` (number, optional): Amount to check (defaults to 1)
-
-**Returns:**
-- `boolean`: True if player has item
-
-### Client Exports
-
-#### `GetPlayer()`
-Returns the local player object.
-
-**Returns:**
-- `table|nil`: Player object or nil if not found
-
-#### `GetPlayerData()`
-Returns local player data.
-
-**Returns:**
-- `table|nil`: Player data or nil if not found
-
-#### `GetMoney(type)`
-Gets local player money for a specific type.
-
-**Parameters:**
-- `type` (string): Money type
-
-**Returns:**
-- `number|nil`: Money amount or nil if not found
-
-#### `GetPlayerStateBag(key)`
-Gets a player state bag value.
-
-**Parameters:**
-- `key` (string): State bag key
-
-**Returns:**
-- `any|nil`: State bag value or nil if not found
-
-#### `WatchPlayerStateBag(key, callback)`
-Watches for changes to a player state bag.
-
-**Parameters:**
-- `key` (string): State bag key
-- `callback` (function): Callback function `function(value, oldValue)`
-
-**Returns:**
-- `function`: Unwatch function
+**Important:** FiveM's `exports` table is read-only, so export override doesn't work. Scripts must use global variables for proxy support. See [Proxy Limitations](docs/PROXY_LIMITATIONS.md) for details.
 
 ## State Bag System
 
@@ -344,8 +283,9 @@ The bridge automatically syncs player data to state bags for efficient client-se
 
 To add support for a new framework:
 
-1. Create a new adapter directory: `adapters/[framework_name]/`
-2. Create `adapter.lua` implementing the Bridge interface:
+1. **Create a new adapter directory**: `adapters/[framework_name]/`
+
+2. **Create `adapter.lua` implementing the Bridge interface:**
 
 ```lua
 -- adapters/[framework_name]/adapter.lua
@@ -366,12 +306,13 @@ function FrameworkAdapter:GetPlayer(source)
 end
 
 -- Implement all required Bridge methods...
+-- See docs/ADAPTER_PATTERN.md for complete interface
 
 FrameworkAdapter = FrameworkAdapter
 return FrameworkAdapter
 ```
 
-3. Add framework detection in `shared/config.lua`:
+3. **Add framework detection in `shared/config.lua`:**
 
 ```lua
 function Config.DetectFramework()
@@ -382,86 +323,9 @@ function Config.DetectFramework()
 end
 ```
 
-4. Update `server/bridge.lua` and `client/client.lua` to use the new adapter
+4. **Update `server/bridge.lua` and `client/client.lua`** to use the new adapter
 
-## Requirements
-
-- FiveM Server
-- Lua 5.4 (included with FiveM)
-- One of the supported frameworks:
-  - **Qbox** or **QBCore** framework
-  - **ESX Legacy** framework
-  - **ND_Core** framework
-
-## Supported Frameworks
-
-### Qbox/QBCore
-- Full support for Qbox and QBCore frameworks
-- Compatible with QBX inventory systems and ox_inventory
-- Supports all standard QBX/QBCore features
-- Gang system support (QBCore exclusive)
-- Player metadata management
-- Vehicle ownership system
-- See [QBCore Documentation](docs/QBCore.md) for detailed information
-
-### ESX Legacy
-- Full support for ESX Legacy framework
-- Automatic inventory system detection (`esx_inventory` or `ox_inventory`)
-- Supports ESX job system, accounts, and metadata
-- See [ESX Documentation](docs/ESX.md) for detailed information
-
-### ND_Core
-- Full support for ND_Core framework
-- Compatible with ND_Core inventory systems and ox_inventory
-- Supports ND_Core job system and metadata
-- See [ND_Core Documentation](docs/ND_Core.md) for detailed information
-
-## Cross-Framework Proxy System
-
-daphne-core includes a powerful proxy system that allows scripts written for one framework to run on servers using different frameworks. For example:
-
-- **QBCore scripts** can run on ESX or ND_Core servers
-- **ESX scripts** can run on QBCore or ND_Core servers
-- **ND_Core scripts** can run on QBCore or ESX servers
-
-### Quick Example
-
-```lua
--- QBCore script running on ESX server
-local QBCore = QBCore  -- ✅ Use global variable (proxy works)
-local Player = QBCore.Functions.GetPlayer(source)
-Player.Functions.AddMoney('cash', 1000)
-```
-
-### Important Notes
-
-⚠️ **Export Override Limitation**: FiveM's `exports` table is read-only, so export override doesn't work. Scripts must use global variables for proxy support:
-
-```lua
--- ✅ Works (global variable - proxy enabled)
-local QBCore = QBCore
-local ESX = ESX
-
--- ❌ Doesn't work (export - proxy disabled)
-local QBCore = exports['qb-core']:GetCoreObject()
-local ESX = exports['es_extended']:getSharedObject()
-```
-
-### Proxy Documentation
-
-- **[Proxy System Guide](docs/PROXY_SYSTEM.md)** - Complete proxy system documentation
-- **[Cross-Framework Proxy Guide](docs/CROSS_FRAMEWORK_PROXY.md)** - Cross-framework usage guide
-- **[Proxy Limitations](docs/PROXY_LIMITATIONS.md)** - Limitations and workarounds
-- **[Proxy Mapping Reference](docs/PROXY_MAPPING.md)** - Complete API mapping reference
-
-## Performance
-
-The bridge system is designed with performance in mind:
-
-- **0.00ms CPU usage** in idle state
-- **Batch processing** for state bag updates
-- **Change detection** to minimize unnecessary syncs
-- **Lazy loading** for on-demand data access
+For detailed instructions, see [Adapter Pattern Guide](docs/ADAPTER_PATTERN.md).
 
 ## Documentation
 
@@ -469,7 +333,6 @@ Complete documentation is available in the `docs/` directory:
 
 ### Getting Started
 - **[Quick Start Guide](docs/QUICK_START.md)** - Get started in 5 minutes
-- **[API Reference](docs/API_REFERENCE.md)** - Complete export function documentation
 - **[Data Structures](docs/DATA_STRUCTURES.md)** - Complete data structure reference
 
 ### Core Documentation
@@ -490,9 +353,9 @@ Complete documentation is available in the `docs/` directory:
 - **[Changelog](docs/CHANGELOG.md)** - Version history and changes
 
 ### Framework-Specific Documentation
-- **[QBCore/Qbox Guide](docs/QBCore.md)** - Complete QBCore/Qbox adapter documentation, features, and examples
-- **[ESX Legacy Guide](docs/ESX.md)** - Complete ESX adapter documentation, features, and examples
-- **[ND_Core Guide](docs/ND_Core.md)** - Complete ND_Core adapter documentation, features, and examples
+- **[QBCore/Qbox Guide](docs/QBCore.md)** - Complete QBCore/Qbox adapter documentation
+- **[ESX Legacy Guide](docs/ESX.md)** - Complete ESX adapter documentation
+- **[ND_Core Guide](docs/ND_Core.md)** - Complete ND_Core adapter documentation
 
 ### Proxy System Documentation
 - **[Proxy System](docs/PROXY_SYSTEM.md)** - Complete proxy system documentation
@@ -520,7 +383,7 @@ See [examples/README.md](examples/README.md) and [Examples Collection](docs/EXAM
 
 ## Contributing
 
-Contributions are welcome! When adding support for new frameworks:
+Contributions are welcome! When adding support for new frameworks or features:
 
 1. Follow the existing adapter pattern
 2. Maintain performance standards (0.00ms policy)
@@ -543,4 +406,3 @@ Current Version: 1.0.0
 ---
 
 **Note**: This bridge system is designed to be framework-agnostic. The adapter pattern allows for easy extension to support additional frameworks in the future.
-
