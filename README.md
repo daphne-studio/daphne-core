@@ -334,7 +334,7 @@ Contributions are welcome! When adding support for new frameworks:
 
 ## License
 
-Copyright © Daphne Studio
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
 ## Support
 
