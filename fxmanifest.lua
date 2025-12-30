@@ -18,7 +18,13 @@ shared_scripts {
     'adapters/qbox/money.lua',
     'adapters/qbox/inventory.lua',
     'adapters/qbox/job.lua',
-    'adapters/qbox/vehicle.lua'
+    'adapters/qbox/vehicle.lua',
+    'adapters/esx/adapter.lua',
+    'adapters/esx/player.lua',
+    'adapters/esx/money.lua',
+    'adapters/esx/inventory.lua',
+    'adapters/esx/job.lua',
+    'adapters/esx/vehicle.lua'
 }
 
 -- Server scripts

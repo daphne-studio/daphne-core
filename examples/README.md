@@ -43,6 +43,19 @@ Complete resource integration examples showing:
 
 **Usage**: Use as a reference for integrating Daphne Core into your own resources.
 
+### `esx_integration.lua`
+ESX-specific integration examples including:
+- ESX job-based access control
+- Money transfer between players
+- Shop system with inventory checks
+- Job salary system
+- Custom account management (dirty money)
+- Inventory item requirements
+- State bag watchers for HUD updates
+- ESX-specific patterns and best practices
+
+**Usage**: Copy ESX-specific examples to your ESX-based resources.
+
 ## Quick Start
 
 1. **Basic Server Usage**:
@@ -63,6 +76,11 @@ Complete resource integration examples showing:
        print('Money changed!')
    end)
    ```
+
+## Framework-Specific Examples
+
+- **Qbox/QBCore**: See `server_basic.lua` and `client_basic.lua` for general examples
+- **ESX Legacy**: See `esx_integration.lua` for ESX-specific patterns and examples
 
 ## Notes
 

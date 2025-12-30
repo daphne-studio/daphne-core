@@ -2,13 +2,9 @@
 ---Main bridge interface for client-side usage
 
 -- These modules are loaded via shared_scripts, so they're available as globals
--- Config and QboxAdapter are loaded before this file in fxmanifest.lua
+-- Config, QboxAdapter, and ESXAdapter are loaded before this file in fxmanifest.lua
 if not Config then
     error('[Client Bridge] Config not found! Make sure shared/config.lua is loaded.')
-end
-
-if not QboxAdapter then
-    error('[Client Bridge] QboxAdapter not found! Make sure adapters/qbox/adapter.lua is loaded.')
 end
 
 -- ClientStateBag is loaded via client_scripts
@@ -26,9 +22,21 @@ local function InitializeBridge()
     local framework = Config.GetFramework()
     
     if framework == Config.Frameworks.QBOX or framework == Config.Frameworks.QBCORE then
+        if not QboxAdapter then
+            error('[Client Bridge] QboxAdapter not found! Make sure adapters/qbox/adapter.lua is loaded.')
+        end
         ActiveAdapter = QboxAdapter
         if ActiveAdapter:Initialize() then
             print('[Daphne Core] Client bridge initialized with Qbox adapter')
+            return true
+        end
+    elseif framework == Config.Frameworks.ESX then
+        if not ESXAdapter then
+            error('[Client Bridge] ESXAdapter not found! Make sure adapters/esx/adapter.lua is loaded.')
+        end
+        ActiveAdapter = ESXAdapter
+        if ActiveAdapter:Initialize() then
+            print('[Daphne Core] Client bridge initialized with ESX adapter')
             return true
         end
     end

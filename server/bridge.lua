@@ -2,13 +2,9 @@
 ---Main bridge interface for server-side usage
 
 -- These modules are loaded via shared_scripts, so they're available as globals
--- Config and QboxAdapter are loaded before this file in fxmanifest.lua
+-- Config, QboxAdapter, and ESXAdapter are loaded before this file in fxmanifest.lua
 if not Config then
     error('[Server Bridge] Config not found! Make sure shared/config.lua is loaded.')
-end
-
-if not QboxAdapter then
-    error('[Server Bridge] QboxAdapter not found! Make sure adapters/qbox/adapter.lua is loaded.')
 end
 
 ---Current active adapter
@@ -21,9 +17,21 @@ local function InitializeBridge()
     local framework = Config.GetFramework()
     
     if framework == Config.Frameworks.QBOX or framework == Config.Frameworks.QBCORE then
+        if not QboxAdapter then
+            error('[Server Bridge] QboxAdapter not found! Make sure adapters/qbox/adapter.lua is loaded.')
+        end
         ActiveAdapter = QboxAdapter
         if ActiveAdapter:Initialize() then
             print('[Daphne Core] Bridge initialized with Qbox adapter')
+            return true
+        end
+    elseif framework == Config.Frameworks.ESX then
+        if not ESXAdapter then
+            error('[Server Bridge] ESXAdapter not found! Make sure adapters/esx/adapter.lua is loaded.')
+        end
+        ActiveAdapter = ESXAdapter
+        if ActiveAdapter:Initialize() then
+            print('[Daphne Core] Bridge initialized with ESX adapter')
             return true
         end
     end

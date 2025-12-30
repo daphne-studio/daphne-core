@@ -10,8 +10,8 @@ A flexible, high-performance framework bridge system for FiveM that uses the Ada
 - **State Bag Integration**: Leverages FiveM's Lua 5.4 state bag mechanism for efficient data synchronization
 - **Performance Optimized**: Batch updates, throttling, and change detection for minimal CPU usage
 - **Framework Agnostic**: Clean abstraction layer that works with any supported framework
-- **Currently Supports**: Qbox/QBCore framework
-- **Future Ready**: Easy to add support for ESX, OX Core, and other frameworks
+- **Currently Supports**: Qbox/QBCore and ESX Legacy frameworks
+- **Future Ready**: Easy to add support for OX Core and other frameworks
 
 ## Architecture
 
@@ -26,10 +26,10 @@ The bridge system follows the Adapter Design Pattern, allowing seamless integrat
                         │
         ┌───────────────┴───────────────┐
         │                               │
-┌───────▼────────┐            ┌────────▼────────┐
-│  Qbox Adapter  │            │  Future Adapters│
-│                │            │  (ESX, OX, etc) │
-└────────────────┘            └─────────────────┘
+┌───────▼────────┐    ┌───────▼────────┐    ┌────────▼────────┐
+│  Qbox Adapter  │    │  ESX Adapter  │    │  Future Adapters│
+│                │    │               │    │  (OX Core, etc) │
+└────────────────┘    └───────────────┘    └─────────────────┘
 ```
 
 ### Core Components
@@ -43,8 +43,18 @@ The bridge system follows the Adapter Design Pattern, allowing seamless integrat
 
 1. Place the `daphne_core` folder in your FiveM server's `resources` directory
 2. Add `ensure daphne_core` to your `server.cfg`
-3. Make sure your framework (Qbox/QBCore) is started before `daphne_core`
+3. Make sure your framework (Qbox/QBCore or ESX Legacy) is started before `daphne_core`
 4. Restart your server
+
+### Framework-Specific Notes
+
+**For Qbox/QBCore:**
+- Ensure `qbx_core` or `qb-core` is started before `daphne_core`
+
+**For ESX Legacy:**
+- Ensure `es_extended` is started before `daphne_core`
+- Supports both `esx_inventory` and `ox_inventory` (auto-detected)
+- See [ESX Documentation](docs/ESX.md) for detailed ESX-specific information
 
 ## Usage
 
@@ -300,7 +310,22 @@ end
 
 - FiveM Server
 - Lua 5.4 (included with FiveM)
-- Qbox or QBCore framework (for current adapter)
+- One of the supported frameworks:
+  - **Qbox** or **QBCore** framework
+  - **ESX Legacy** framework
+
+## Supported Frameworks
+
+### Qbox/QBCore
+- Full support for Qbox and QBCore frameworks
+- Compatible with QBX inventory systems
+- Supports all standard QBX/QBCore features
+
+### ESX Legacy
+- Full support for ESX Legacy framework
+- Automatic inventory system detection (`esx_inventory` or `ox_inventory`)
+- Supports ESX job system, accounts, and metadata
+- See [ESX Documentation](docs/ESX.md) for detailed information
 
 ## Performance
 
@@ -321,6 +346,10 @@ Comprehensive usage examples are available in the `examples/` directory:
 - **[Resource Integration](examples/resource_integration.lua)** - Complete integration examples
 
 See [examples/README.md](examples/README.md) for more details.
+
+## Framework-Specific Documentation
+
+- **[ESX Legacy Guide](docs/ESX.md)** - Complete ESX adapter documentation, features, and examples
 
 ## Contributing
 
