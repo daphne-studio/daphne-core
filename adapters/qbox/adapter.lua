@@ -29,43 +29,118 @@ QboxAdapter.initialized = false
 QboxAdapter.QBCore = nil
 QboxAdapter.PlayerData = nil
 
----Initialize Qbox adapter
+---Try to get QBCore object with multiple methods
+---@return table|nil qbCore QBCore object or nil
+local function GetQBCoreObject()
+    -- Method 1: Try QBX GetCoreObject export (Qbox)
+    local success, qbCore = pcall(function()
+        if exports['qbx_core'] then
+            if type(exports['qbx_core'].GetCoreObject) == 'function' then
+                return exports['qbx_core']:GetCoreObject()
+            elseif type(exports['qbx_core']) == 'table' and exports['qbx_core'].GetCoreObject then
+                return exports['qbx_core']:GetCoreObject()
+            end
+        end
+        return nil
+    end)
+    if success and qbCore then
+        return qbCore
+    end
+    
+    -- Method 2: Try standard QBCore GetCoreObject export
+    success, qbCore = pcall(function()
+        if exports['qb-core'] then
+            if type(exports['qb-core'].GetCoreObject) == 'function' then
+                return exports['qb-core']:GetCoreObject()
+            elseif type(exports['qb-core']) == 'table' and exports['qb-core'].GetCoreObject then
+                return exports['qb-core']:GetCoreObject()
+            end
+        end
+        return nil
+    end)
+    if success and qbCore then
+        return qbCore
+    end
+    
+    -- Method 3: Try direct export access (for compatibility)
+    success, qbCore = pcall(function()
+        if exports['qbx_core'] and type(exports['qbx_core']) == 'table' then
+            -- Check if it's already the QBCore object (has GetPlayer method)
+            if exports['qbx_core'].GetPlayer then
+                return exports['qbx_core']
+            end
+        end
+        if exports['qb-core'] and type(exports['qb-core']) == 'table' then
+            -- Check if it's already the QBCore object (has GetPlayer method)
+            if exports['qb-core'].GetPlayer then
+                return exports['qb-core']
+            end
+        end
+        return nil
+    end)
+    if success and qbCore then
+        return qbCore
+    end
+    
+    -- Method 4: Try global QBCore variable (some setups use this)
+    success, qbCore = pcall(function()
+        if QBCore and type(QBCore) == 'table' and QBCore.GetPlayer then
+            return QBCore
+        end
+        return nil
+    end)
+    if success and qbCore then
+        return qbCore
+    end
+    
+    return nil
+end
+
+---Initialize Qbox adapter with retry logic
+---@param retries number? Number of retries (default: 10)
+---@param delay number? Delay between retries in ms (default: 500)
 ---@return boolean success
-function QboxAdapter:Initialize()
+function QboxAdapter:Initialize(retries, delay)
     if self.initialized then
         return true
     end
     
-    -- Try to get QBCore object using GetCoreObject() pattern (QBCore official method)
-    local success, qbCore = pcall(function()
-        -- Try QBX first (Qbox)
-        if exports['qbx_core'] and exports['qbx_core'].GetCoreObject then
-            return exports['qbx_core']:GetCoreObject()
-        end
-        -- Try standard QBCore
-        if exports['qb-core'] and exports['qb-core'].GetCoreObject then
-            return exports['qb-core']:GetCoreObject()
-        end
-        -- Fallback: Try direct export (for compatibility)
-        if exports['qbx_core'] then
-            return exports['qbx_core']
-        end
-        if exports['qb-core'] then
-            return exports['qb-core']
-        end
-        return nil
-    end)
+    retries = retries or 10
+    delay = delay or 500
     
-    if not success or not qbCore then
-        print('[Daphne Core] Qbox/QBCore not found! Make sure qbx_core or qb-core is started.')
-        return false
+    -- Try to get QBCore object with retries
+    local qbCore = nil
+    for i = 1, retries do
+        qbCore = GetQBCoreObject()
+        
+        if qbCore then
+            -- Verify it's a valid QBCore object
+            if type(qbCore) == 'table' and (qbCore.GetPlayer or qbCore.Functions) then
+                self.QBCore = qbCore
+                self.initialized = true
+                print('[Daphne Core] Qbox adapter initialized successfully')
+                return true
+            end
+        end
+        
+        -- Wait before retrying (except on last attempt)
+        if i < retries then
+            Wait(delay)
+        end
     end
     
-    self.QBCore = qbCore
-    self.initialized = true
+    -- Final attempt with detailed error message
+    local resourceState = GetResourceState('qbx_core')
+    local qbResourceState = GetResourceState('qb-core')
     
-    print('[Daphne Core] Qbox adapter initialized successfully')
-    return true
+    print('[Daphne Core] Qbox/QBCore not found!')
+    print(string.format('[Daphne Core] qbx_core state: %s', resourceState))
+    print(string.format('[Daphne Core] qb-core state: %s', qbResourceState))
+    print('[Daphne Core] Make sure qbx_core or qb-core is started BEFORE daphne_core in server.cfg')
+    print('[Daphne Core] Example: ensure qbx_core (or qb-core)')
+    print('[Daphne Core]          ensure daphne_core')
+    
+    return false
 end
 
 ---Get QBCore object

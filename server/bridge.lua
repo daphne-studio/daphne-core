@@ -21,7 +21,8 @@ local function InitializeBridge()
             error('[Server Bridge] QboxAdapter not found! Make sure adapters/qbox/adapter.lua is loaded.')
         end
         ActiveAdapter = QboxAdapter
-        if ActiveAdapter:Initialize() then
+        -- Initialize with retry logic (10 retries, 500ms delay)
+        if ActiveAdapter:Initialize(10, 500) then
             print('[Daphne Core] Bridge initialized with Qbox adapter')
             return true
         end
@@ -250,6 +251,12 @@ end
 AddEventHandler('onResourceStart', function(resourceName)
     if resourceName == GetCurrentResourceName() then
         InitializeBridge()
+    -- Retry initialization if framework starts after daphne_core
+    elseif resourceName == 'qbx_core' or resourceName == 'qb-core' then
+        if not ActiveAdapter or not ActiveAdapter.initialized then
+            print(string.format('[Daphne Core] Framework resource %s started, retrying initialization...', resourceName))
+            InitializeBridge()
+        end
     end
 end)
 
