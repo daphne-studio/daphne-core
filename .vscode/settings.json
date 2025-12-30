@@ -1,0 +1,11 @@
+{
+    "Lua.workspace.library": [
+        "C:/Users/yusuf/Desktop/Github/ox_types/types",
+        "C:/Users/yusuf/Desktop/Github/qbox_types/types"
+    ],
+    "Lua.diagnostics.globals": [
+        "RegisterNetEvent"
+    ],
+    "editor.defaultFormatter": "Koihik.vscode-lua-format",
+    "editor.formatOnSave": true
+}
