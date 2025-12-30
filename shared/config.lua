@@ -114,6 +114,19 @@ function Config.IsFramework(framework)
     return Config.CurrentFramework == framework
 end
 
+---Proxy configuration
+Config.Proxy = {
+    Enabled = true,  -- Enable proxy system
+    CrossFrameworkEnabled = true,  -- Enable cross-framework proxy (all frameworks can proxy to each other)
+    OverrideGlobals = true,  -- Override global variables (QBCore, ESX, NDCore)
+    OverrideExports = true,  -- Override exports (exports['qb-core'], exports['es_extended'], etc.)
+    FallbackToOriginal = false,  -- Fallback to original framework if proxy fails
+    LogProxyCalls = false,  -- Log all proxy calls (debug)
+    LogCrossFrameworkCalls = true,  -- Log cross-framework calls
+    AutoDetectProxyTarget = true,  -- Automatically detect active adapter as proxy target
+    ProxyTarget = nil  -- Manual proxy target (nil = auto detect)
+}
+
 -- Export Config as global for use in other scripts
 Config = Config
 

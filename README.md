@@ -7,10 +7,11 @@ A flexible, high-performance framework bridge system for FiveM that uses the Ada
 ## Features
 
 - **Adapter Pattern Architecture**: Easily extensible to support multiple frameworks
+- **Cross-Framework Proxy System**: Run scripts written for one framework on servers using different frameworks
 - **State Bag Integration**: Leverages FiveM's Lua 5.4 state bag mechanism for efficient data synchronization
 - **Performance Optimized**: Batch updates, throttling, and change detection for minimal CPU usage
 - **Framework Agnostic**: Clean abstraction layer that works with any supported framework
-- **Currently Supports**: Qbox/QBCore and ESX Legacy frameworks
+- **Currently Supports**: Qbox/QBCore, ESX Legacy, and ND_Core frameworks
 - **Future Ready**: Easy to add support for OX Core and other frameworks
 
 ## Architecture
@@ -390,6 +391,7 @@ end
 - One of the supported frameworks:
   - **Qbox** or **QBCore** framework
   - **ESX Legacy** framework
+  - **ND_Core** framework
 
 ## Supported Frameworks
 
@@ -407,6 +409,50 @@ end
 - Automatic inventory system detection (`esx_inventory` or `ox_inventory`)
 - Supports ESX job system, accounts, and metadata
 - See [ESX Documentation](docs/ESX.md) for detailed information
+
+### ND_Core
+- Full support for ND_Core framework
+- Compatible with ND_Core inventory systems and ox_inventory
+- Supports ND_Core job system and metadata
+- See [ND_Core Documentation](docs/ND_Core.md) for detailed information
+
+## Cross-Framework Proxy System
+
+daphne-core includes a powerful proxy system that allows scripts written for one framework to run on servers using different frameworks. For example:
+
+- **QBCore scripts** can run on ESX or ND_Core servers
+- **ESX scripts** can run on QBCore or ND_Core servers
+- **ND_Core scripts** can run on QBCore or ESX servers
+
+### Quick Example
+
+```lua
+-- QBCore script running on ESX server
+local QBCore = QBCore  -- ✅ Use global variable (proxy works)
+local Player = QBCore.Functions.GetPlayer(source)
+Player.Functions.AddMoney('cash', 1000)
+```
+
+### Important Notes
+
+⚠️ **Export Override Limitation**: FiveM's `exports` table is read-only, so export override doesn't work. Scripts must use global variables for proxy support:
+
+```lua
+-- ✅ Works (global variable - proxy enabled)
+local QBCore = QBCore
+local ESX = ESX
+
+-- ❌ Doesn't work (export - proxy disabled)
+local QBCore = exports['qb-core']:GetCoreObject()
+local ESX = exports['es_extended']:getSharedObject()
+```
+
+### Proxy Documentation
+
+- **[Proxy System Guide](docs/PROXY_SYSTEM.md)** - Complete proxy system documentation
+- **[Cross-Framework Proxy Guide](docs/CROSS_FRAMEWORK_PROXY.md)** - Cross-framework usage guide
+- **[Proxy Limitations](docs/PROXY_LIMITATIONS.md)** - Limitations and workarounds
+- **[Proxy Mapping Reference](docs/PROXY_MAPPING.md)** - Complete API mapping reference
 
 ## Performance
 
@@ -446,6 +492,14 @@ Complete documentation is available in the `docs/` directory:
 ### Framework-Specific Documentation
 - **[QBCore/Qbox Guide](docs/QBCore.md)** - Complete QBCore/Qbox adapter documentation, features, and examples
 - **[ESX Legacy Guide](docs/ESX.md)** - Complete ESX adapter documentation, features, and examples
+- **[ND_Core Guide](docs/ND_Core.md)** - Complete ND_Core adapter documentation, features, and examples
+
+### Proxy System Documentation
+- **[Proxy System](docs/PROXY_SYSTEM.md)** - Complete proxy system documentation
+- **[Cross-Framework Proxy Guide](docs/CROSS_FRAMEWORK_PROXY.md)** - Cross-framework usage guide
+- **[Proxy Limitations](docs/PROXY_LIMITATIONS.md)** - Limitations and workarounds guide
+- **[Proxy Mapping Reference](docs/PROXY_MAPPING.md)** - Complete API mapping reference
+- **[ND_Core Proxy Guide](docs/PROXY_ND_CORE.md)** - ND_Core-specific proxy documentation
 
 ## Examples
 
@@ -457,6 +511,10 @@ Comprehensive usage examples are available in the `examples/` directory:
 - **[Resource Integration](examples/resource_integration.lua)** - Complete integration examples
 - **[QBCore Integration](examples/qbcore_integration.lua)** - QBCore-specific examples
 - **[ESX Integration](examples/esx_integration.lua)** - ESX-specific examples
+- **[Cross-Framework Examples](examples/cross_framework_example.lua)** - Cross-framework proxy examples
+- **[QBCore on ESX Example](examples/qbcore_on_esx_example.lua)** - QBCore script running on ESX
+- **[ESX on QBCore Example](examples/esx_on_qbcore_example.lua)** - ESX script running on QBCore
+- **[ND_Core Examples](examples/nd_core_on_qbcore_example.lua)** - ND_Core cross-framework examples
 
 See [examples/README.md](examples/README.md) and [Examples Collection](docs/EXAMPLES_COLLECTION.md) for more details.
 
