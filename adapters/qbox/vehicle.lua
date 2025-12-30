@@ -17,8 +17,20 @@ Vehicle.__index = Vehicle
 ---@param plate string Vehicle plate
 ---@return table|nil vehicleData Vehicle data or nil
 function Vehicle:GetVehicleByPlate(plate)
+    local qbCore = QboxAdapter:GetQBCore()
+    if not qbCore then return nil end
+    
+    -- Try to get vehicle from database via QBCore
     local success, vehicleData = pcall(function()
-        return exports['qbx_core']:GetVehicleByPlate(plate) or exports['qb-core']:GetVehicleByPlate(plate)
+        -- Try QBX export first
+        if exports['qbx_core'] and exports['qbx_core'].GetVehicleByPlate then
+            return exports['qbx_core']:GetVehicleByPlate(plate)
+        end
+        -- Try QBCore export
+        if exports['qb-core'] and exports['qb-core'].GetVehicleByPlate then
+            return exports['qb-core']:GetVehicleByPlate(plate)
+        end
+        return nil
     end)
     
     if success and vehicleData then
@@ -32,8 +44,20 @@ end
 ---@param citizenid string Citizen ID
 ---@return table vehicles Table of vehicles owned by player
 function Vehicle:GetVehiclesByCitizenId(citizenid)
+    local qbCore = QboxAdapter:GetQBCore()
+    if not qbCore then return {} end
+    
+    -- Try to get vehicles from database via QBCore
     local success, vehicles = pcall(function()
-        return exports['qbx_core']:GetVehiclesByCitizenId(citizenid) or exports['qb-core']:GetVehiclesByCitizenId(citizenid)
+        -- Try QBX export first
+        if exports['qbx_core'] and exports['qbx_core'].GetVehiclesByCitizenId then
+            return exports['qbx_core']:GetVehiclesByCitizenId(citizenid)
+        end
+        -- Try QBCore export
+        if exports['qb-core'] and exports['qb-core'].GetVehiclesByCitizenId then
+            return exports['qb-core']:GetVehiclesByCitizenId(citizenid)
+        end
+        return nil
     end)
     
     if success and vehicles then

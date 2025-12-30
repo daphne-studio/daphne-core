@@ -56,6 +56,23 @@ ESX-specific integration examples including:
 
 **Usage**: Copy ESX-specific examples to your ESX-based resources.
 
+### `qbcore_integration.lua`
+QBCore/Qbox-specific integration examples including:
+- QBCore job-based access control
+- QBCore gang-based access control (QBCore exclusive)
+- Money transfer between players
+- Shop system with inventory checks
+- Job salary system
+- Metadata management (hunger/thirst system)
+- Inventory item requirements
+- Vehicle ownership checks
+- Gang territory system
+- ox_inventory specific usage
+- State bag watchers for HUD updates
+- QBCore-specific patterns and best practices
+
+**Usage**: Copy QBCore-specific examples to your QBCore/Qbox-based resources.
+
 ## Quick Start
 
 1. **Basic Server Usage**:
@@ -79,8 +96,9 @@ ESX-specific integration examples including:
 
 ## Framework-Specific Examples
 
-- **Qbox/QBCore**: See `server_basic.lua` and `client_basic.lua` for general examples
+- **Qbox/QBCore**: See `qbcore_integration.lua` for QBCore-specific patterns and examples
 - **ESX Legacy**: See `esx_integration.lua` for ESX-specific patterns and examples
+- **General**: See `server_basic.lua` and `client_basic.lua` for framework-agnostic examples
 
 ## Notes
 

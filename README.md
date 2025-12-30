@@ -204,6 +204,82 @@ Gets vehicle data.
 **Returns:**
 - `table|nil`: Vehicle data or nil if not found
 
+#### `GetGang(source)` (QBCore only)
+Gets player gang information.
+
+**Parameters:**
+- `source` (number): Player server ID
+
+**Returns:**
+- `table|nil`: Gang data or nil if not found
+
+#### `GetMetadata(source, key)`
+Gets player metadata.
+
+**Parameters:**
+- `source` (number): Player server ID
+- `key` (string, optional): Metadata key (returns all metadata if nil)
+
+**Returns:**
+- `any|nil`: Metadata value or all metadata if key is nil
+
+#### `SetMetadata(source, key, value)`
+Sets player metadata.
+
+**Parameters:**
+- `source` (number): Player server ID
+- `key` (string): Metadata key
+- `value` (any): Metadata value
+
+**Returns:**
+- `boolean`: True if successful
+
+#### `GetItem(source, item)`
+Gets item from player inventory.
+
+**Parameters:**
+- `source` (number): Player server ID
+- `item` (string): Item name
+
+**Returns:**
+- `table|nil`: Item data or nil if not found
+
+#### `AddItem(source, item, amount, slot, info)`
+Adds item to player inventory.
+
+**Parameters:**
+- `source` (number): Player server ID
+- `item` (string): Item name
+- `amount` (number): Amount to add
+- `slot` (number, optional): Slot number
+- `info` (table, optional): Item info/metadata
+
+**Returns:**
+- `boolean`: True if successful
+
+#### `RemoveItem(source, item, amount, slot)`
+Removes item from player inventory.
+
+**Parameters:**
+- `source` (number): Player server ID
+- `item` (string): Item name
+- `amount` (number): Amount to remove
+- `slot` (number, optional): Slot number
+
+**Returns:**
+- `boolean`: True if successful
+
+#### `HasItem(source, item, amount)`
+Checks if player has item.
+
+**Parameters:**
+- `source` (number): Player server ID
+- `item` (string): Item name
+- `amount` (number, optional): Amount to check (defaults to 1)
+
+**Returns:**
+- `boolean`: True if player has item
+
 ### Client Exports
 
 #### `GetPlayer()`
@@ -252,6 +328,7 @@ The bridge automatically syncs player data to state bags for efficient client-se
 
 - **Player Money**: `daphne:player:[source]:money`
 - **Player Job**: `daphne:player:[source]:job`
+- **Player Gang**: `daphne:player:[source]:gang` (QBCore only)
 - **Player Data**: `daphne:player:[source]:data`
 - **Vehicle Data**: `daphne:vehicle:[entity]:data`
 
@@ -318,8 +395,12 @@ end
 
 ### Qbox/QBCore
 - Full support for Qbox and QBCore frameworks
-- Compatible with QBX inventory systems
+- Compatible with QBX inventory systems and ox_inventory
 - Supports all standard QBX/QBCore features
+- Gang system support (QBCore exclusive)
+- Player metadata management
+- Vehicle ownership system
+- See [QBCore Documentation](docs/QBCore.md) for detailed information
 
 ### ESX Legacy
 - Full support for ESX Legacy framework
@@ -349,6 +430,7 @@ See [examples/README.md](examples/README.md) for more details.
 
 ## Framework-Specific Documentation
 
+- **[QBCore/Qbox Guide](docs/QBCore.md)** - Complete QBCore/Qbox adapter documentation, features, and examples
 - **[ESX Legacy Guide](docs/ESX.md)** - Complete ESX adapter documentation, features, and examples
 
 ## Contributing

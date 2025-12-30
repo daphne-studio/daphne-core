@@ -111,6 +111,84 @@ function Bridge:GetInventory(source)
     return adapter:GetInventory(source)
 end
 
+---Get item from player inventory
+---@param source number Player server ID
+---@param item string Item name
+---@return table|nil itemData Item data or nil
+function Bridge:GetItem(source, item)
+    local framework = Config.GetFramework()
+    if framework == Config.Frameworks.QBOX or framework == Config.Frameworks.QBCORE then
+        if QboxInventory then
+            return QboxInventory:GetItem(source, item)
+        end
+    elseif framework == Config.Frameworks.ESX then
+        if ESXInventory then
+            return ESXInventory:GetItem(source, item)
+        end
+    end
+    return nil
+end
+
+---Add item to player inventory
+---@param source number Player server ID
+---@param item string Item name
+---@param amount number Amount to add
+---@param slot number? Slot number (optional)
+---@param info table? Item info/metadata (optional)
+---@return boolean success True if successful
+function Bridge:AddItem(source, item, amount, slot, info)
+    local framework = Config.GetFramework()
+    if framework == Config.Frameworks.QBOX or framework == Config.Frameworks.QBCORE then
+        if QboxInventory then
+            return QboxInventory:AddItem(source, item, amount, slot, info)
+        end
+    elseif framework == Config.Frameworks.ESX then
+        if ESXInventory then
+            return ESXInventory:AddItem(source, item, amount, slot, info)
+        end
+    end
+    return false
+end
+
+---Remove item from player inventory
+---@param source number Player server ID
+---@param item string Item name
+---@param amount number Amount to remove
+---@param slot number? Slot number (optional)
+---@return boolean success True if successful
+function Bridge:RemoveItem(source, item, amount, slot)
+    local framework = Config.GetFramework()
+    if framework == Config.Frameworks.QBOX or framework == Config.Frameworks.QBCORE then
+        if QboxInventory then
+            return QboxInventory:RemoveItem(source, item, amount, slot)
+        end
+    elseif framework == Config.Frameworks.ESX then
+        if ESXInventory then
+            return ESXInventory:RemoveItem(source, item, amount, slot)
+        end
+    end
+    return false
+end
+
+---Check if player has item
+---@param source number Player server ID
+---@param item string Item name
+---@param amount number? Amount to check (optional, defaults to 1)
+---@return boolean hasItem True if player has item
+function Bridge:HasItem(source, item, amount)
+    local framework = Config.GetFramework()
+    if framework == Config.Frameworks.QBOX or framework == Config.Frameworks.QBCORE then
+        if QboxInventory then
+            return QboxInventory:HasItem(source, item, amount)
+        end
+    elseif framework == Config.Frameworks.ESX then
+        if ESXInventory then
+            return ESXInventory:HasItem(source, item, amount)
+        end
+    end
+    return false
+end
+
 ---Get player job
 ---@param source number Player server ID
 ---@return table|nil job Job data
@@ -129,6 +207,45 @@ function Bridge:GetVehicle(vehicle)
     return adapter:GetVehicle(vehicle)
 end
 
+---Get player gang (QBCore only)
+---@param source number Player server ID
+---@return table|nil gang Gang data
+function Bridge:GetGang(source)
+    local adapter = GetAdapter()
+    if not adapter then return nil end
+    if adapter.GetGang then
+        return adapter:GetGang(source)
+    end
+    return nil
+end
+
+---Get player metadata
+---@param source number Player server ID
+---@param key string? Metadata key (optional)
+---@return any|nil metadata Metadata value or all metadata
+function Bridge:GetMetadata(source, key)
+    local adapter = GetAdapter()
+    if not adapter then return nil end
+    if adapter.GetMetadata then
+        return adapter:GetMetadata(source, key)
+    end
+    return nil
+end
+
+---Set player metadata
+---@param source number Player server ID
+---@param key string Metadata key
+---@param value any Metadata value
+---@return boolean success True if successful
+function Bridge:SetMetadata(source, key, value)
+    local adapter = GetAdapter()
+    if not adapter then return false end
+    if adapter.SetMetadata then
+        return adapter:SetMetadata(source, key, value)
+    end
+    return false
+end
+
 ---Initialize bridge on resource start
 AddEventHandler('onResourceStart', function(resourceName)
     if resourceName == GetCurrentResourceName() then
@@ -145,6 +262,13 @@ exports('RemoveMoney', function(source, type, amount) return Bridge:RemoveMoney(
 exports('GetInventory', function(source) return Bridge:GetInventory(source) end)
 exports('GetJob', function(source) return Bridge:GetJob(source) end)
 exports('GetVehicle', function(vehicle) return Bridge:GetVehicle(vehicle) end)
+exports('GetGang', function(source) return Bridge:GetGang(source) end)
+exports('GetMetadata', function(source, key) return Bridge:GetMetadata(source, key) end)
+exports('SetMetadata', function(source, key, value) return Bridge:SetMetadata(source, key, value) end)
+exports('GetItem', function(source, item) return Bridge:GetItem(source, item) end)
+exports('AddItem', function(source, item, amount, slot, info) return Bridge:AddItem(source, item, amount, slot, info) end)
+exports('RemoveItem', function(source, item, amount, slot) return Bridge:RemoveItem(source, item, amount, slot) end)
+exports('HasItem', function(source, item, amount) return Bridge:HasItem(source, item, amount) end)
 
 -- Export Bridge as global for use in other server scripts
 Bridge = Bridge

@@ -15,6 +15,13 @@
 ---@field onduty boolean
 ---@field payment number
 
+---@class GangData
+---@field name string
+---@field label string
+---@field grade table
+---@field isboss boolean
+---@field payment number
+
 ---@class VehicleData
 ---@field plate string
 ---@field model string
@@ -31,6 +38,9 @@
 ---@field RemoveMoney fun(source: number, type: string, amount: number): boolean
 ---@field GetInventory fun(source: number): table|nil
 ---@field GetJob fun(source: number): JobData|nil
+---@field GetGang fun(source: number): GangData|nil
+---@field GetMetadata fun(source: number, key: string?): any|nil
+---@field SetMetadata fun(source: number, key: string, value: any): boolean
 ---@field GetVehicle fun(vehicle: number): VehicleData|nil
 ---@field Initialize fun(): boolean
 

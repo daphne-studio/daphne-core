@@ -127,5 +127,8 @@ function Inventory:HasItem(source, item, amount)
     return itemAmount >= amount
 end
 
+-- Export Inventory as global for use in other scripts
+ESXInventory = Inventory
+
 return Inventory
 

@@ -32,13 +32,28 @@ function QboxAdapter:Initialize()
         return true
     end
     
-    -- Try to get QBCore export (works for both Qbox and QBCore)
+    -- Try to get QBCore object using GetCoreObject() pattern (QBCore official method)
     local success, qbCore = pcall(function()
-        return exports['qbx_core'] or exports['qb-core']
+        -- Try QBX first (Qbox)
+        if exports['qbx_core'] and exports['qbx_core'].GetCoreObject then
+            return exports['qbx_core']:GetCoreObject()
+        end
+        -- Try standard QBCore
+        if exports['qb-core'] and exports['qb-core'].GetCoreObject then
+            return exports['qb-core']:GetCoreObject()
+        end
+        -- Fallback: Try direct export (for compatibility)
+        if exports['qbx_core'] then
+            return exports['qbx_core']
+        end
+        if exports['qb-core'] then
+            return exports['qb-core']
+        end
+        return nil
     end)
     
     if not success or not qbCore then
-        print('[Daphne Core] Qbox/QBCore not found!')
+        print('[Daphne Core] Qbox/QBCore not found! Make sure qbx_core or qb-core is started.')
         return false
     end
     
@@ -155,6 +170,20 @@ function QboxAdapter:GetInventory(source)
     local player = self:GetPlayer(source)
     if not player then return nil end
     
+    -- Check if using ox_inventory
+    local usingOxInventory = false
+    local success, _ = pcall(function()
+        return exports.ox_inventory
+    end)
+    if success then
+        usingOxInventory = true
+    end
+    
+    -- If using ox_inventory, return empty table (ox_inventory works item-by-item)
+    if usingOxInventory then
+        return {}
+    end
+    
     -- Try to get inventory from exports
     local success, inventory = pcall(function()
         return exports['qbx_core']:GetInventory(source) or exports['qb-core']:GetInventory(source)
@@ -185,6 +214,68 @@ function QboxAdapter:GetJob(source)
     return job
 end
 
+---Get player gang
+---@param source number Player server ID
+---@return GangData|nil gang Gang data or nil if not found
+function QboxAdapter:GetGang(source)
+    local player = self:GetPlayer(source)
+    if not player then return nil end
+    
+    local gang = player.PlayerData.gang
+    
+    if gang then
+        -- Sync to state bag
+        StateBag.SetStateBag('player', source, 'gang', gang)
+    end
+    
+    return gang
+end
+
+---Get player metadata
+---@param source number Player server ID
+---@param key string? Metadata key (optional, returns all metadata if nil)
+---@return any|nil metadata Metadata value or all metadata if key is nil
+function QboxAdapter:GetMetadata(source, key)
+    local player = self:GetPlayer(source)
+    if not player then return nil end
+    
+    local metadata = player.PlayerData.metadata or {}
+    
+    if key then
+        return metadata[key]
+    end
+    
+    return metadata
+end
+
+---Set player metadata
+---@param source number Player server ID
+---@param key string Metadata key
+---@param value any Metadata value
+---@return boolean success True if successful
+function QboxAdapter:SetMetadata(source, key, value)
+    local player = self:GetPlayer(source)
+    if not player then return false end
+    
+    if not player.PlayerData.metadata then
+        player.PlayerData.metadata = {}
+    end
+    
+    player.PlayerData.metadata[key] = value
+    
+    -- Sync to state bag
+    StateBag.SetStateBag('player', source, 'data', {
+        citizenid = player.PlayerData.citizenid,
+        name = player.PlayerData.charinfo and (player.PlayerData.charinfo.firstname .. ' ' .. player.PlayerData.charinfo.lastname) or '',
+        money = player.PlayerData.money or {},
+        job = player.PlayerData.job or {},
+        gang = player.PlayerData.gang or {},
+        metadata = player.PlayerData.metadata or {}
+    })
+    
+    return true
+end
+
 ---Get vehicle data
 ---@param vehicle number Vehicle entity
 ---@return VehicleData|nil data Vehicle data or nil if not found
@@ -198,20 +289,45 @@ function QboxAdapter:GetVehicle(vehicle)
     local modelName = GetDisplayNameFromVehicleModel(model)
     
     -- Try to get vehicle data from database/exports
-    local success, vehicleData = pcall(function()
-        return exports['qbx_core']:GetVehicleByPlate(plate) or exports['qb-core']:GetVehicleByPlate(plate)
-    end)
+    local qbCore = self:GetQBCore()
+    local vehicleData = nil
+    
+    if qbCore then
+        local success, data = pcall(function()
+            -- Try QBX export first
+            if exports['qbx_core'] and exports['qbx_core'].GetVehicleByPlate then
+                return exports['qbx_core']:GetVehicleByPlate(plate)
+            end
+            -- Try QBCore export
+            if exports['qb-core'] and exports['qb-core'].GetVehicleByPlate then
+                return exports['qb-core']:GetVehicleByPlate(plate)
+            end
+            return nil
+        end)
+        
+        if success and data then
+            vehicleData = data
+        end
+    end
     
     local data = {
         plate = plate,
         model = modelName,
         props = {},
-        metadata = {}
+        metadata = {},
+        citizenid = nil,
+        engine = nil,
+        body = nil,
+        fuel = nil
     }
     
-    if success and vehicleData then
-        data.props = vehicleData.mods or {}
+    if vehicleData then
+        data.props = vehicleData.mods or vehicleData.props or {}
         data.metadata = vehicleData.metadata or {}
+        data.citizenid = vehicleData.citizenid
+        data.engine = vehicleData.engine
+        data.body = vehicleData.body
+        data.fuel = vehicleData.fuel
     end
     
     -- Sync to state bag

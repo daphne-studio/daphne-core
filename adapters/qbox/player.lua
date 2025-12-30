@@ -47,5 +47,52 @@ function Player:GetPlayerCount()
     return qbCore:GetQBPlayers() and #qbCore:GetQBPlayers() or 0
 end
 
+---Get player metadata
+---@param source number Player server ID
+---@param key string? Metadata key (optional, returns all metadata if nil)
+---@return any|nil metadata Metadata value or all metadata if key is nil
+function Player:GetMetadata(source, key)
+    local player = QboxAdapter:GetPlayer(source)
+    if not player then return nil end
+    
+    local metadata = player.PlayerData.metadata or {}
+    
+    if key then
+        return metadata[key]
+    end
+    
+    return metadata
+end
+
+---Set player metadata
+---@param source number Player server ID
+---@param key string Metadata key
+---@param value any Metadata value
+---@return boolean success True if successful
+function Player:SetMetadata(source, key, value)
+    local player = QboxAdapter:GetPlayer(source)
+    if not player then return false end
+    
+    if not player.PlayerData.metadata then
+        player.PlayerData.metadata = {}
+    end
+    
+    player.PlayerData.metadata[key] = value
+    
+    -- Sync to state bag
+    if StateBag then
+        StateBag.SetStateBag('player', source, 'data', {
+            citizenid = player.PlayerData.citizenid,
+            name = player.PlayerData.charinfo and (player.PlayerData.charinfo.firstname .. ' ' .. player.PlayerData.charinfo.lastname) or '',
+            money = player.PlayerData.money or {},
+            job = player.PlayerData.job or {},
+            gang = player.PlayerData.gang or {},
+            metadata = player.PlayerData.metadata or {}
+        })
+    end
+    
+    return true
+end
+
 return Player
 
