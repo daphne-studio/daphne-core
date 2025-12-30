@@ -417,6 +417,36 @@ The bridge system is designed with performance in mind:
 - **Change detection** to minimize unnecessary syncs
 - **Lazy loading** for on-demand data access
 
+## Documentation
+
+Complete documentation is available in the `docs/` directory:
+
+### Getting Started
+- **[Quick Start Guide](docs/QUICK_START.md)** - Get started in 5 minutes
+- **[API Reference](docs/API_REFERENCE.md)** - Complete export function documentation
+- **[Data Structures](docs/DATA_STRUCTURES.md)** - Complete data structure reference
+
+### Core Documentation
+- **[Architecture](docs/ARCHITECTURE.md)** - System architecture and design patterns
+- **[Adapter Pattern Guide](docs/ADAPTER_PATTERN.md)** - Adapter implementation and extension guide
+- **[State Bag System](docs/STATE_BAG_SYSTEM.md)** - State bag usage and optimization guide
+- **[Performance Guide](docs/PERFORMANCE.md)** - Performance optimizations and best practices
+- **[Error Handling](docs/ERROR_HANDLING.md)** - Error handling patterns and debugging
+
+### Integration & Examples
+- **[Integration Guide](docs/INTEGRATION_GUIDE.md)** - Integration patterns and migration guide
+- **[Examples Collection](docs/EXAMPLES_COLLECTION.md)** - Code examples and walkthroughs
+- **[Examples Directory](examples/README.md)** - Example files directory
+
+### Reference
+- **[Documentation Index](docs/INDEX.md)** - Complete documentation navigation
+- **[FAQ](docs/FAQ.md)** - Frequently asked questions and troubleshooting
+- **[Changelog](docs/CHANGELOG.md)** - Version history and changes
+
+### Framework-Specific Documentation
+- **[QBCore/Qbox Guide](docs/QBCore.md)** - Complete QBCore/Qbox adapter documentation, features, and examples
+- **[ESX Legacy Guide](docs/ESX.md)** - Complete ESX adapter documentation, features, and examples
+
 ## Examples
 
 Comprehensive usage examples are available in the `examples/` directory:
@@ -425,13 +455,10 @@ Comprehensive usage examples are available in the `examples/` directory:
 - **[Basic Client Examples](examples/client_basic.lua)** - Client-side usage patterns
 - **[Advanced State Bag Examples](examples/statebag_advanced.lua)** - Advanced state bag patterns
 - **[Resource Integration](examples/resource_integration.lua)** - Complete integration examples
+- **[QBCore Integration](examples/qbcore_integration.lua)** - QBCore-specific examples
+- **[ESX Integration](examples/esx_integration.lua)** - ESX-specific examples
 
-See [examples/README.md](examples/README.md) for more details.
-
-## Framework-Specific Documentation
-
-- **[QBCore/Qbox Guide](docs/QBCore.md)** - Complete QBCore/Qbox adapter documentation, features, and examples
-- **[ESX Legacy Guide](docs/ESX.md)** - Complete ESX adapter documentation, features, and examples
+See [examples/README.md](examples/README.md) and [Examples Collection](docs/EXAMPLES_COLLECTION.md) for more details.
 
 ## Contributing
 
