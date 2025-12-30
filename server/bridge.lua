@@ -35,6 +35,16 @@ local function InitializeBridge()
             print('[Daphne Core] Bridge initialized with ESX adapter')
             return true
         end
+    elseif framework == Config.Frameworks.ND_CORE then
+        if not NDCoreAdapter then
+            error('[Server Bridge] NDCoreAdapter not found! Make sure adapters/nd_core/adapter.lua is loaded.')
+        end
+        ActiveAdapter = NDCoreAdapter
+        -- Initialize with retry logic (10 retries, 500ms delay)
+        if ActiveAdapter:Initialize(10, 500) then
+            print('[Daphne Core] Bridge initialized with ND Core adapter')
+            return true
+        end
     end
     
     print('[Daphne Core] ERROR: Failed to initialize bridge!')
@@ -127,6 +137,10 @@ function Bridge:GetItem(source, item)
         if ESXInventory then
             return ESXInventory:GetItem(source, item)
         end
+    elseif framework == Config.Frameworks.ND_CORE then
+        if NDCoreInventory then
+            return NDCoreInventory:GetItem(source, item)
+        end
     end
     return nil
 end
@@ -148,6 +162,10 @@ function Bridge:AddItem(source, item, amount, slot, info)
         if ESXInventory then
             return ESXInventory:AddItem(source, item, amount, slot, info)
         end
+    elseif framework == Config.Frameworks.ND_CORE then
+        if NDCoreInventory then
+            return NDCoreInventory:AddItem(source, item, amount, slot, info)
+        end
     end
     return false
 end
@@ -168,6 +186,10 @@ function Bridge:RemoveItem(source, item, amount, slot)
         if ESXInventory then
             return ESXInventory:RemoveItem(source, item, amount, slot)
         end
+    elseif framework == Config.Frameworks.ND_CORE then
+        if NDCoreInventory then
+            return NDCoreInventory:RemoveItem(source, item, amount, slot)
+        end
     end
     return false
 end
@@ -186,6 +208,10 @@ function Bridge:HasItem(source, item, amount)
     elseif framework == Config.Frameworks.ESX then
         if ESXInventory then
             return ESXInventory:HasItem(source, item, amount)
+        end
+    elseif framework == Config.Frameworks.ND_CORE then
+        if NDCoreInventory then
+            return NDCoreInventory:HasItem(source, item, amount)
         end
     end
     return false
@@ -254,6 +280,11 @@ AddEventHandler('onResourceStart', function(resourceName)
         InitializeBridge()
     -- Retry initialization if framework starts after daphne_core
     elseif resourceName == 'qbx_core' or resourceName == 'qb-core' then
+        if not ActiveAdapter or not ActiveAdapter.initialized then
+            print(string.format('[Daphne Core] Framework resource %s started, retrying initialization...', resourceName))
+            InitializeBridge()
+        end
+    elseif resourceName == 'nd_core' then
         if not ActiveAdapter or not ActiveAdapter.initialized then
             print(string.format('[Daphne Core] Framework resource %s started, retrying initialization...', resourceName))
             InitializeBridge()

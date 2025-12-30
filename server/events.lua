@@ -151,3 +151,107 @@ RegisterNetEvent('esx:setAccountMoney', function(playerId, account)
         end
     end
 end)
+
+---ND Core Event Handlers
+---Listen for ND Core money change event
+---Event parameters: source, account, amount, action, reason
+AddEventHandler('ND:moneyChange', function(source, account, amount, action, reason)
+    -- Invalidate cache to force refresh
+    if Cache then
+        Cache.InvalidatePlayer(source)
+    end
+    
+    -- Update money state bag
+    if StateBag and Bridge then
+        local playerData = Bridge:GetPlayerData(source)
+        if playerData and playerData.money then
+            StateBag.SetStateBag('player', source, 'money', playerData.money, false)
+        end
+    end
+end)
+
+---Listen for ND Core character loaded event
+---Event parameters: character (includes player data and player functions)
+AddEventHandler('ND:characterLoaded', function(character)
+    local source = character.source
+    
+    -- Invalidate cache to force refresh
+    if Cache then
+        Cache.InvalidatePlayer(source)
+    end
+    
+    -- Bridge is loaded via server_scripts, so it's available as global
+    if Bridge then
+        -- Sync player data to state bag when character loads
+        local playerData = Bridge:GetPlayerData(source)
+        if playerData then
+            -- Update state bags reactively
+            if StateBag then
+                StateBag.SetStateBag('player', source, 'data', {
+                    citizenid = playerData.citizenid,
+                    name = playerData.name,
+                    money = playerData.money or {},
+                    job = playerData.job or {},
+                    metadata = playerData.metadata or {}
+                }, false)
+                
+                if playerData.money then
+                    StateBag.SetStateBag('player', source, 'money', playerData.money, false)
+                end
+                
+                if playerData.job then
+                    StateBag.SetStateBag('player', source, 'job', playerData.job, false)
+                end
+            end
+            print(string.format('[Daphne Core] ND Core Character %s loaded, data synced to state bag', source))
+        end
+    end
+end)
+
+---Listen for ND Core character unloaded event
+---Event parameters: source, character (includes player data and player functions)
+AddEventHandler('ND:characterUnloaded', function(source, character)
+    -- Clear player cache when character unloads
+    if Cache then
+        Cache.InvalidatePlayer(source)
+    end
+    
+    -- Clear state bag cache
+    if StateBag then
+        StateBag.ClearCache('player', source)
+        print(string.format('[Daphne Core] ND Core Character %s unloaded, cache cleared', source))
+    end
+end)
+
+---Listen for ND Core character update event
+---Event parameters: character (contains player data)
+AddEventHandler('ND:updateCharacter', function(character)
+    local source = character.source
+    
+    -- Invalidate cache to force refresh
+    if Cache then
+        Cache.InvalidatePlayer(source)
+    end
+    
+    -- Update state bag with new character data
+    if StateBag and Bridge then
+        local playerData = Bridge:GetPlayerData(source)
+        if playerData then
+            StateBag.SetStateBag('player', source, 'data', {
+                citizenid = playerData.citizenid,
+                name = playerData.name,
+                money = playerData.money or {},
+                job = playerData.job or {},
+                metadata = playerData.metadata or {}
+            }, false)
+            
+            if playerData.money then
+                StateBag.SetStateBag('player', source, 'money', playerData.money, false)
+            end
+            
+            if playerData.job then
+                StateBag.SetStateBag('player', source, 'job', playerData.job, false)
+            end
+        end
+    end
+end)

@@ -2,6 +2,38 @@
 
 Version history, breaking changes, migration guides, and deprecation notices.
 
+## Version 1.1.0
+
+**Release Date:** ND Core Adapter Release
+
+### Features
+
+- ND Core adapter support
+- Character-based system support (multi-character)
+- Groups system integration (jobs as groups)
+- License system support
+- Vehicle keys and ownership system
+- ND Core event handlers (ND:moneyChange, ND:characterLoaded, ND:characterUnloaded, ND:updateCharacter)
+
+### Supported Frameworks
+
+- QBCore
+- Qbox
+- ESX Legacy
+- **ND Core** (NEW)
+
+### Breaking Changes
+
+None
+
+### Migration Guide
+
+N/A
+
+### Deprecation Notices
+
+None
+
 ## Version 1.0.0
 
 **Release Date:** Initial Release

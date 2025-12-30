@@ -27,7 +27,29 @@ shared_scripts {
     'adapters/esx/money.lua',
     'adapters/esx/inventory.lua',
     'adapters/esx/job.lua',
-    'adapters/esx/vehicle.lua'
+    'adapters/esx/vehicle.lua',
+    'adapters/nd_core/adapter.lua',
+    'adapters/nd_core/player.lua',
+    'adapters/nd_core/money.lua',
+    'adapters/nd_core/inventory.lua',
+    'adapters/nd_core/job.lua',
+    'adapters/nd_core/vehicle.lua',
+    -- API Mapper and Data Converter (needed by proxies)
+    'core/api_mapper.lua',
+    'core/data_converter.lua',
+    -- Proxy core modules
+    'core/proxy.lua',
+    'core/proxy_manager.lua',
+    -- Base proxy class
+    'proxies/base_proxy.lua',
+    -- Player object proxies (must load before framework proxies)
+    'proxies/qbcore_player_proxy.lua',
+    'proxies/esx_player_proxy.lua',
+    'proxies/nd_core_player_proxy.lua',
+    -- Framework proxies
+    'proxies/qbcore_proxy.lua',
+    'proxies/esx_proxy.lua',
+    'proxies/nd_core_proxy.lua'
 }
 
 -- Server scripts
@@ -36,11 +58,14 @@ server_scripts {
     'server/bridge.lua',
     'server/statebag.lua',
     'server/events.lua',
-    'server/test_adapter.lua'
+    'server/test_adapter.lua',
+    'server/proxy.lua',
+    'server/test_proxy.lua'
 }
 
 -- Client scripts (load order matters - dependencies first)
 client_scripts {
     'client/statebag.lua',
-    'client/client.lua'
+    'client/client.lua',
+    'client/proxy.lua'
 }

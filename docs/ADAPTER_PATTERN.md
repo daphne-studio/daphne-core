@@ -121,6 +121,46 @@ end
 - Handles ESX account system
 - Updates state bags reactively
 
+### NDCoreAdapter
+
+**Location:** `adapters/nd_core/adapter.lua`
+
+**Framework Support:** ND Core
+
+**Features:**
+- Full ND Core support
+- Character-based system (multi-character support)
+- Groups system (jobs are groups)
+- License system support
+- Vehicle keys and ownership system
+- Metadata support
+- Supports `ox_inventory` (auto-detected)
+
+**Initialization:**
+```lua
+function NDCoreAdapter:Initialize(retries, delay)
+    -- Tries multiple methods to get ND Core object
+    -- 1. exports['ND_Core'] export (primary method, capital letters)
+    -- 2. Global NDCore variable
+    -- 3. exports['nd_core'] export (fallback)
+    -- Uses retry logic (10 retries, 500ms delay by default)
+end
+```
+
+**Export Information:**
+- Export name: `exports['ND_Core']` (capital letters)
+- Resource name: `ND_Core` (may vary, but export is consistent)
+- Detection: Adapter detects via export availability, not just resource state
+
+**Key Implementation Details:**
+- Uses `NDCore.getPlayer(source)` to get player objects
+- Character-based: `player.id` is character ID
+- Jobs are managed through groups system (`player.getJob()`)
+- Caches player objects for performance
+- Invalidates cache on write operations
+- Updates state bags reactively
+- Handles ND Core events: `ND:moneyChange`, `ND:characterLoaded`, `ND:characterUnloaded`, `ND:updateCharacter`
+
 ## Adding New Adapters
 
 ### Step 1: Create Adapter Directory

@@ -23,6 +23,13 @@ Complete navigation structure for daphne-core documentation.
 - [Performance Guide](PERFORMANCE.md) - Performance optimizations
 - [Error Handling](ERROR_HANDLING.md) - Error handling guide
 
+### Proxy System
+- [Proxy System](PROXY_SYSTEM.md) - Complete proxy system documentation
+- [Cross-Framework Proxy Guide](CROSS_FRAMEWORK_PROXY.md) - Cross-framework usage guide
+- [Proxy Limitations](PROXY_LIMITATIONS.md) - Limitations and workarounds guide
+- [Proxy Mapping Reference](PROXY_MAPPING.md) - Complete API mapping reference
+- [ND_Core Proxy Guide](PROXY_ND_CORE.md) - ND_Core-specific proxy documentation
+
 ## Integration
 
 - [Integration Guide](INTEGRATION_GUIDE.md) - Integration patterns and migration
@@ -48,12 +55,15 @@ Complete navigation structure for daphne-core documentation.
 ### Using daphne-core
 1. [API Reference](API_REFERENCE.md)
 2. [State Bag System](STATE_BAG_SYSTEM.md)
-3. [Examples Collection](EXAMPLES_COLLECTION.md)
+3. [Proxy System](PROXY_SYSTEM.md) - Cross-framework proxy
+4. [Examples Collection](EXAMPLES_COLLECTION.md)
 
 ### Advanced Topics
 1. [Performance Guide](PERFORMANCE.md)
 2. [Error Handling](ERROR_HANDLING.md)
 3. [Adapter Pattern Guide](ADAPTER_PATTERN.md)
+4. [Cross-Framework Proxy Guide](CROSS_FRAMEWORK_PROXY.md) - Cross-framework compatibility
+5. [Proxy Limitations](PROXY_LIMITATIONS.md) - Understanding limitations
 
 ### Troubleshooting
 1. [FAQ](FAQ.md)
@@ -70,6 +80,7 @@ Complete navigation structure for daphne-core documentation.
 ### Intermediate Developers
 - [Integration Guide](INTEGRATION_GUIDE.md)
 - [State Bag System](STATE_BAG_SYSTEM.md)
+- [Proxy System](PROXY_SYSTEM.md) - Cross-framework proxy
 - [Examples Collection](EXAMPLES_COLLECTION.md) - Advanced examples
 
 ### Advanced Developers
@@ -120,4 +131,6 @@ Complete navigation structure for daphne-core documentation.
 - [Examples Directory](../examples/) - Example files
 - [Framework Documentation](QBCore.md) - QBCore-specific docs
 - [Framework Documentation](ESX.md) - ESX-specific docs
+- [Framework Documentation](ND_Core.md) - ND Core-specific docs
+- [Proxy System Documentation](PROXY_SYSTEM.md) - Cross-framework proxy system
 
