@@ -30,6 +30,9 @@ StateBag._cache = {}
 ---Pending updates per entity
 StateBag._pendingUpdates = {}
 
+---Last values for state bag watchers (for oldValue tracking)
+StateBag._lastValues = {}
+
 ---Deep comparison helper function (optimized)
 ---Performs shallow comparison first, then selective deep comparison
 ---@param a any First value
@@ -296,23 +299,106 @@ end
 function StateBag.WatchStateBag(entityType, entityId, key, callback)
     local stateBagName = StateBag.GetStateBagName(entityType, entityId, key)
     
-    -- Get initial value
+    -- Get initial value and store it
     local stateBag = StateBag.GetStateBag(entityType, entityId, key)
-    local lastValue = nil
+    local initialValue = nil
     if stateBag then
-        lastValue = stateBag[stateBagName]
+        initialValue = stateBag[stateBagName]
+    end
+    
+    -- Initialize _lastValues table if it doesn't exist
+    if not StateBag._lastValues then
+        StateBag._lastValues = {}
+    end
+    
+    -- Debug: Print state bag name and initial value
+    print(string.format('[StateBag] Watching %s - initial value exists: %s', stateBagName, tostring(initialValue ~= nil)))
+    
+    -- Store initial value in _lastValues table (keyed by stateBagName)
+    -- Use a deep copy to avoid reference issues
+    if initialValue ~= nil then
+        if type(initialValue) == 'table' then
+            -- Deep copy table
+            local copy = {}
+            for k, v in pairs(initialValue) do
+                if type(v) == 'table' then
+                    copy[k] = {}
+                    for k2, v2 in pairs(v) do
+                        copy[k][k2] = v2
+                    end
+                else
+                    copy[k] = v
+                end
+            end
+            StateBag._lastValues[stateBagName] = copy
+        else
+            StateBag._lastValues[stateBagName] = initialValue
+        end
+    else
+        StateBag._lastValues[stateBagName] = nil
     end
     
     -- Add state bag change handler
     AddStateBagChangeHandler(stateBagName, nil, function(bagName, key, value, reserved, replicated)
-        local oldValue = lastValue
-        lastValue = value
-        callback(value, oldValue)
+        -- Get old value from _lastValues table BEFORE updating it
+        local oldValue = StateBag._lastValues[stateBagName]
+        
+        -- Deep copy oldValue IMMEDIATELY to preserve it before any updates
+        local oldValueCopy = nil
+        if oldValue ~= nil then
+            if type(oldValue) == 'table' then
+                oldValueCopy = {}
+                for k, v in pairs(oldValue) do
+                    if type(v) == 'table' then
+                        oldValueCopy[k] = {}
+                        for k2, v2 in pairs(v) do
+                            oldValueCopy[k][k2] = v2
+                        end
+                    else
+                        oldValueCopy[k] = v
+                    end
+                end
+            else
+                oldValueCopy = oldValue
+            end
+        end
+        
+        -- Update last value BEFORE calling callback (so next change will have correct oldValue)
+        -- Deep copy new value to avoid reference issues
+        if value ~= nil then
+            if type(value) == 'table' then
+                local copy = {}
+                for k, v in pairs(value) do
+                    if type(v) == 'table' then
+                        copy[k] = {}
+                        for k2, v2 in pairs(v) do
+                            copy[k][k2] = v2
+                        end
+                    else
+                        copy[k] = v
+                    end
+                end
+                StateBag._lastValues[stateBagName] = copy
+            else
+                StateBag._lastValues[stateBagName] = value
+            end
+        else
+            StateBag._lastValues[stateBagName] = nil
+        end
+        
+        -- Debug: Print state bag name and values
+        print(string.format('[StateBag] %s changed - oldValue exists: %s, newValue exists: %s', stateBagName, tostring(oldValueCopy ~= nil), tostring(value ~= nil)))
+        
+        -- Call callback with new value and old value (using the copy)
+        -- Note: oldValueCopy will be nil on first call, which is expected behavior
+        callback(value, oldValueCopy)
     end)
     
     return function()
-        -- Unwatch functionality (state bag handlers can't be removed, but we can ignore)
-        -- In practice, this is a no-op but provides API consistency
+        -- Unwatch functionality: remove from _lastValues
+        if StateBag._lastValues then
+            StateBag._lastValues[stateBagName] = nil
+        end
     end
 end
 

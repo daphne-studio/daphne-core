@@ -161,9 +161,22 @@ RegisterNetEvent('QBCore:Server:OnPlayerLoaded', function()
 end)
 
 ---QBCore/Qbox reactive updates
----Note: QBCore doesn't have specific events for job/money changes
----State bag updates are handled in adapter write operations (AddMoney, RemoveMoney, SetMetadata)
----Cache invalidation ensures fresh data on next read
+---Listen for QBCore/Qbox money change event
+AddEventHandler('QBCore:Server:OnMoneyChange', function(source, moneyType, amount, operation, reason)
+    -- Invalidate cache to force refresh
+    if Cache then
+        Cache.InvalidatePlayer(source)
+    end
+    
+    -- Update money state bag
+    if StateBag and Bridge then
+        local playerData = Bridge:GetPlayerData(source)
+        if playerData and playerData.money then
+            StateBag.SetStateBag('player', source, 'money', playerData.money, false)
+            print(string.format('[Daphne Core] Money changed for player %s: %s %s %s (reason: %s)', source, operation, amount, moneyType, reason or 'N/A'))
+        end
+    end
+end)
 
 ---Listen for player disconnect (universal event)
 AddEventHandler('playerDropped', function(reason)
