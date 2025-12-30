@@ -27,7 +27,13 @@ shared_scripts {
     'adapters/esx/money.lua',
     'adapters/esx/inventory.lua',
     'adapters/esx/job.lua',
-    'adapters/esx/vehicle.lua'
+    'adapters/esx/vehicle.lua',
+    'adapters/nd_core/adapter.lua',
+    'adapters/nd_core/player.lua',
+    'adapters/nd_core/money.lua',
+    'adapters/nd_core/inventory.lua',
+    'adapters/nd_core/job.lua',
+    'adapters/nd_core/vehicle.lua'
 }
 
 -- Server scripts

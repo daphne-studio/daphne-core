@@ -18,6 +18,7 @@ Get started with daphne-core in 5 minutes. This guide covers installation, basic
 - One of the supported frameworks:
   - **QBCore** or **Qbox**
   - **ESX Legacy**
+  - **ND Core**
 
 ### Installation Steps
 
@@ -29,6 +30,8 @@ Get started with daphne-core in 5 minutes. This guide covers installation, basic
    ensure qbx_core  # or qb-core for QBCore
    # OR
    ensure es_extended  # for ESX
+   # OR
+   ensure ND_Core  # for ND Core (note: capital letters)
    
    # Then ensure daphne_core
    ensure daphne_core
@@ -45,6 +48,12 @@ Get started with daphne-core in 5 minutes. This guide covers installation, basic
 **For ESX Legacy:**
 - Ensure `es_extended` is started before `daphne_core`
 - Supports both `esx_inventory` and `ox_inventory` (auto-detected)
+
+**For ND Core:**
+- Ensure `ND_Core` is started before `daphne_core` (note: resource name uses capital letters)
+- Supports `ox_inventory` (auto-detected)
+- Character-based system with multi-character support
+- Export name: `exports['ND_Core']`
 
 ## Verification
 
@@ -63,6 +72,15 @@ Or for ESX:
 [Daphne Core] Framework detected: es_extended
 [Daphne Core] Bridge initialized with ESX adapter
 ```
+
+Or for ND Core:
+
+```
+[Daphne Core] Framework detected: nd_core
+[Daphne Core] Bridge initialized with ND Core adapter
+```
+
+**Note:** Even if ND_Core resource shows as "stopped", the adapter will detect it if `exports['ND_Core']` is available.
 
 If you see an error, ensure your framework is started **before** daphne_core in server.cfg.
 
@@ -313,6 +331,7 @@ Now that you've completed the quick start:
 2. Check framework resource name matches exactly:
    - `qbx_core` or `qb-core` for QBCore
    - `es_extended` for ESX
+   - `ND_Core` for ND Core (capital letters - resource name may vary, but export is `ND_Core`)
 3. Restart server
 
 ### Exports Return Nil

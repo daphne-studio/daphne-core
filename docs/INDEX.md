@@ -120,4 +120,5 @@ Complete navigation structure for daphne-core documentation.
 - [Examples Directory](../examples/) - Example files
 - [Framework Documentation](QBCore.md) - QBCore-specific docs
 - [Framework Documentation](ESX.md) - ESX-specific docs
+- [Framework Documentation](ND_Core.md) - ND Core-specific docs
 
