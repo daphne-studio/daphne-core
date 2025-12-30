@@ -51,7 +51,8 @@ local function GetAdapter()
 end
 
 ---Bridge exports
-local Bridge = {}
+-- Create new Bridge table to override core/bridge.lua abstract Bridge
+Bridge = {}
 
 ---Get player object
 ---@param source number Player server ID
@@ -277,8 +278,8 @@ exports('AddItem', function(source, item, amount, slot, info) return Bridge:AddI
 exports('RemoveItem', function(source, item, amount, slot) return Bridge:RemoveItem(source, item, amount, slot) end)
 exports('HasItem', function(source, item, amount) return Bridge:HasItem(source, item, amount) end)
 
--- Export Bridge as global for use in other server scripts
-Bridge = Bridge
+-- Bridge is already global, no need to reassign
+-- This file overrides the abstract Bridge from core/bridge.lua
 
 return Bridge
 

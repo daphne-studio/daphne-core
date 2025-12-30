@@ -35,7 +35,8 @@ server_scripts {
     'server/server.lua',
     'server/bridge.lua',
     'server/statebag.lua',
-    'server/events.lua'
+    'server/events.lua',
+    'server/test_adapter.lua'
 }
 
 -- Client scripts (load order matters - dependencies first)

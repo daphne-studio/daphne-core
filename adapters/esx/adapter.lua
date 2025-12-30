@@ -64,8 +64,18 @@ end
 ---@return table|nil esx ESX object
 function ESXAdapter:GetESX()
     if not self.initialized then
-        self:Initialize()
+        local success = self:Initialize()
+        if not success then
+            -- Initialize failed, ESX not available
+            return nil
+        end
     end
+    
+    -- Double-check that ESX is still valid
+    if not self.ESX then
+        return nil
+    end
+    
     return self.ESX
 end
 
@@ -81,9 +91,25 @@ function ESXAdapter:GetPlayer(source)
     
     -- Get from framework
     local esx = self:GetESX()
-    if not esx then return nil end
+    if not esx then 
+        return nil 
+    end
     
-    local player = esx.GetPlayerFromId(source)
+    -- Check if ESX has GetPlayerFromId method
+    if not esx.GetPlayerFromId or type(esx.GetPlayerFromId) ~= 'function' then
+        print('[Daphne Core] ERROR: ESX object does not have GetPlayerFromId method')
+        return nil
+    end
+    
+    local success, player = pcall(function()
+        return esx.GetPlayerFromId(source)
+    end)
+    
+    if not success then
+        print(string.format('[Daphne Core] ERROR: Failed to get player %s from ESX: %s', source, tostring(player)))
+        return nil
+    end
+    
     if player then
         -- Cache the player object
         Cache.SetPlayer(source, player)
