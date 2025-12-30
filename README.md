@@ -2,6 +2,8 @@
 
 A flexible, high-performance framework bridge system for FiveM that uses the Adapter Design Pattern to support multiple frameworks seamlessly. Built with performance in mind, following the 0.00ms policy and utilizing FiveM's Lua 5.4 state bag mechanism.
 
+![Daphne Core](https://i.imgur.com/lXlmouO.png)
+
 ## Features
 
 - **Adapter Pattern Architecture**: Easily extensible to support multiple frameworks
